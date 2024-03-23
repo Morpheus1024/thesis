@@ -5,13 +5,13 @@
 # - [x] depth map
 
 # 2. preprocessing
-# - [ ] calibration - compensation for geometric error of sensor spacing
+# - [x] calibration - compensation for geometric error of sensor spacing - already done
 # - [ ] image segmentation
 # - [ ] depth map filtering
 
 # 3. 3D reconstruction
-# - ] cloud points from depth map
-# - ] 3D mesh - a mesh representing surfaces is created from the point cloud
+# - [ ] cloud points from depth map
+# - [ ] 3D mesh - a mesh representing surfaces is created from the point cloud
 
 # 4. semantic segmentation
 # - [ ] classification of each segment
@@ -26,6 +26,10 @@ import pyrealsense2 as rs
 import numpy as np
 import cv2
 
+from matplotlib import pyplot as plt
+
+from skimage import io, segmentation, color, feature
+ 
 # Configure depth and color streams
 pipeline = rs.pipeline()
 config = rs.config()
@@ -73,21 +77,26 @@ try:
         color_image = np.asanyarray(color_frame.get_data())
 
         # Apply colormap on depth image (image must be converted to 8-bit per pixel first)
-        depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_JET)
+        depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.04), cv2.COLORMAP_JET)
 
         depth_colormap_dim = depth_colormap.shape
         color_colormap_dim = color_image.shape
 
-        # If depth and color resolutions are different, resize color image to match depth image for display
+        ## 2. Preprocessing 
+
+        ###  callibration
+        
+        # Apply calibration - Intel Realsense is already callibrated
+        
+        ### image segmentation
+
+
+
         if depth_colormap_dim != color_colormap_dim:
             resized_color_image = cv2.resize(color_image, dsize=(depth_colormap_dim[1], depth_colormap_dim[0]), interpolation=cv2.INTER_AREA)
             images = np.hstack((resized_color_image, depth_colormap))
         else:
-            images = np.hstack((color_image, depth_colormap))
-
-        ## 2. Preprocessing 
-
-        ###  callibration
+            images = np.hstack((color_image, depth_colormap ))
 
         # Show images
         cv2.namedWindow('RealSense', cv2.WINDOW_AUTOSIZE)
@@ -96,6 +105,10 @@ try:
         if key & 0xFF == ord('q') or key == 27:
             cv2.destroyAllWindows()
             break
+            # Wyświetlanie wyników
+        # plt.imshow(segmented_image)
+        # plt.show()
+
 
 finally:
 
