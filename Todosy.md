@@ -16,4 +16,3 @@ Gotowe modele do sprawdzenia:
 Linki:
 
 - [Example od Intela w Pythonie](https://github.com/IntelRealSense/librealsense/tree/master/wrappers/python/examples)
-- 
