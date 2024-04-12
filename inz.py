@@ -82,21 +82,55 @@ try:
         depth_colormap_dim = depth_colormap.shape
         color_colormap_dim = color_image.shape
 
-        ## 2. Preprocessing 
-
-        ###  callibration
-        
-        # Apply calibration - Intel Realsense is already callibrated
-        
-        ### image segmentation
-
-
-
         if depth_colormap_dim != color_colormap_dim:
             resized_color_image = cv2.resize(color_image, dsize=(depth_colormap_dim[1], depth_colormap_dim[0]), interpolation=cv2.INTER_AREA)
             images = np.hstack((resized_color_image, depth_colormap))
         else:
             images = np.hstack((color_image, depth_colormap ))
+
+        ## 2. Preprocessing 
+
+        ###  callibration - Intel Realsense is already callibrated
+        
+        ### image segmentation
+        
+        #### K-means
+
+        image_2d_k_mean = color_image.reshape(-1, 3)
+        image_2d_k_mean = np.float32(image_2d_k_mean)
+        criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 100, 0.2)
+        K = 3
+        attempts = 10
+        ret, label, center = cv2.kmeans(image_2d_k_mean, K, None, criteria, attempts, cv2.KMEANS_PP_CENTERS)
+        center = np.uint8(center)
+        segmented_data = center[label.flatten()]
+        segmented_image_k_means = segmented_data.reshape((color_image.shape))
+        
+        #### Color-based segmentation
+        image_2d_color = color_image
+        low = np.array([0, 0, 0])
+        high = np.array([255, 255, 255])
+        mask = cv2.inRange(image_2d_color, low, high)
+        segmented_image_color = cv2.bitwise_and(color_image, color_image, mask=mask)
+        
+
+        #### Contour detection
+        image_2d_contour = color_image
+        gray = cv2.cvtColor(image_2d_contour, cv2.COLOR_BGR2GRAY)
+        _, thresh = cv2.threshold(gray, np.mean(gray), 255, cv2.THRESH_BINARY_INV)
+        edges = cv2.Canny(thresh, 0, 255)
+        edges = cv2.dilate(edges, None)
+        edges = cv2.erode(edges, None)
+        contours, _ = cv2.findContours(edges, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        segmented_image_contour = cv2.drawContours(color_image, contours, -1, (0, 255, 0), 3)
+
+        ### depth map filtering
+        
+        
+
+
+
+
 
         # Show images
         cv2.namedWindow('RealSense', cv2.WINDOW_AUTOSIZE)
