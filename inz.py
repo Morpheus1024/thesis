@@ -125,6 +125,25 @@ try:
         segmented_image_contour = cv2.drawContours(color_image, contours, -1, (0, 255, 0), 3)
 
         ### depth map filtering
+
+
+        
+
+
+        ## 3. 3D reconstruction
+
+        ### cloud points from depth map
+        points = rs.pointcloud()
+        depth_image = np.asanyarray(depth_frame.get_data())
+        depth_intrin = depth_frame.profile.as_video_stream_profile().intrinsics
+        depth_image = cv2.resize(depth_image, (640, 480))
+        depth_image = np.asanyarray(depth_frame.get_data())
+
+        ### 3D mesh - a mesh representing surfaces is created from the point cloud
+
+
+        
+        
         
         
 
