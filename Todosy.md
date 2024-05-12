@@ -8,9 +8,9 @@
 
 Gotowe modele do sprawdzenia:
 
-[Ta strona do panoptycznej](https://paperswithcode.com/task/panoptic-segmentation)
-[Ta strona do segmentacji](https://paperswithcode.com/task/semantic-segmentation)
-[State of the art?](https://deci.ai/blog/sota-dnns-overview/)
+[SOTA Panoptycznej](https://paperswithcode.com/task/panoptic-segmentation)
+[SOTA Semantycznej](https://paperswithcode.com/task/semantic-segmentation)
+[SOTA Semantycznej 3d](https://paperswithcode.com/task/3d-semantic-segmentation)
 [Tutaj też?](https://deci.ai/blog/semantic-segmentation-sota-architectures/)
 
 Linki:
