@@ -93,7 +93,6 @@ try:
         output_predictions = output_predictions.byte().cpu().numpy()
 
         # Define a color map
-        
         colormap = np.random.randint(0, 255, size=(150, 3), dtype=np.uint8)
 
         segmented_image = colormap[output_predictions % len(colormap)]
@@ -102,12 +101,41 @@ try:
         image_to_show = np.hstack((color_image, segmented_image))
 
         # Wyświetlenie obrazu za pomocą OpenCV
+        #break
+
+        # Utworzenie chmury punktów 3D
+        intrinsics = pipeline_profile.get_stream(rs.stream.color).as_video_stream_profile().get_intrinsics()
+        point_cloud = []
+        for y in range(depth_image.shape[0]):
+            for x in range(depth_image.shape[1]):
+                depth = depth_image[y, x]
+                if depth > 0:
+                    point = rs.rs2_deproject_pixel_to_point(intrinsics, [x, y], depth)
+                    class_color = colormap[output_predictions[y, x] % len(colormap)]
+                    point_cloud.append((point[0], point[1], point[2], class_color[0], class_color[1], class_color[2]))
+
+        point_cloud = np.array(point_cloud)
+
+        # Zapisanie chmury punktów do pliku PLY
+        with open("3d_map.ply", 'w') as file:
+            file.write("ply\n")
+            file.write("format ascii 1.0\n")
+            file.write(f"element vertex {len(point_cloud)}\n")
+            file.write("property float x\n")
+            file.write("property float y\n")
+            file.write("property float z\n")
+            file.write("property uchar red\n")
+            file.write("property uchar green\n")
+            file.write("property uchar blue\n")
+            file.write("end_header\n")
+            for point in point_cloud:
+                file.write(f"{point[0]} {point[1]} {point[2]} {int(point[3])} {int(point[4])} {int(point[5])}\n")
         cv2.imshow('Segmented Image', image_to_show)
         key = cv2.waitKey(0)
+
         break
 
 finally:
     cv2.destroyAllWindows()
-
-    # Stop streaming
+    # Zatrzymanie strumieniowania
     pipeline.stop()
