@@ -20,9 +20,9 @@ Kamera wykorzystana w niniejszej pracy to Intel® RealSense™ Depth Camera D435
 Z roku na rok powstają coraz nowsze sposoby i podejścia do segmentacji zdjęć i filmów. Poddawane są one testom wydajnościowym na otwartoźródłowych, powszechnie uznanych wśród społeczności zbiorach danych. Trudno nadążyć za najnowyszymi i najwydajniejszymi systemami z uwagi na szybkość zmian jakie zachodzą w tej dziedzinie.
 W tym rozdzialę zostaną opisane jedne z najpopularniejszych używanych systemy segmentacji, które są aktywnie używane w celach segmentacji panoptycznej.
 
-Do najpopularniejszych frameworków segmentacji panoptyczej można zaliczyć transformers [przypis 8], Pythorch Image Models [przypis 9], Datacron2 [przypis 10] oraz mmdetection [przypis 11].Wybrano je z uwagi na wsparcie społeczności, dostępność i popularność na repozytorium Github oraz ciągły rozwój w celu osiągnięcia coraz lepszych wyników wydajności.
+Do najpopularniejszych frameworków segmentacji panoptyczej można zaliczyć transformers [przypis 8]. Wybrano go z uwagi na dostępność, wsparcie społeczności i popularność na repozytorium Github oraz ciągły rozwój w celu osiągnięcia coraz lepszych wyników wydajności.
 
-### Transformers
+### 2.1 Transformers
 
 Transformers oddaje w ręce użytkownika API, które pozwalają na używanie już wytrenowanych modelu. Framework jest szeroko stosowany w dziedzianch związanych z NLP, audio czy chociażby z wizją komputerową.
 
@@ -38,9 +38,39 @@ Celem autorów Transformers było stowrzenie hubu wytrenowanych modeli w celu u�
 
 Modele dostępne w Transformers można zainstalować poprzez instalację biblioteki PyTorch, Tensorflow oraz Flex jak i poprzez bezpośrednie pobranie ze strony projektu na Githubie.
 
-### Pythorch Image Models
+## 3. Program tworzący i operujący na trójwymiarowej mapie semantycznej
 
-Pythorch Image Models jest kolejnym otwartoźródłowym frameworkem, który daje dostęp do wytrenowanych już modeli skupionych wokół wizji komputerowej.
+### 3.1 Opracowanie teorii
+
+Po uzyskaniu obrazu z kamery należy podać go operacji modelem wytrenowanym w celu segmentacji semantycznej. W efekcie otrzymano informacje na temat przynależności danego pixela obrazu do klasy np. człowieka, samochodu itp. Kolejnym etapem jest dodanie informacji o głebi z czujników na segmentowany obraz.
+
+### 3.2 Opis programu
+
+Program został napisany w języku Python 3.9. Użyto tej wersji z uwagi na obsługę bibliotek kamery Intel Realsense. Wykorzystano następujące biblioteki:
+
+- pyrealsense2 - biblioteka pozwalająca na łatwy dostęp do obrazu i informacji o jego głębi z kamery Intel Realsense
+- NumPy - biblioteka do obliczeń numerycznych
+- OpenCV - otwartoźródłowa biblioteka do operacji na obrazach
+- PyTorch - biblioteka udostaępniajaca pretrenowane modele AI z frameworka transformers
+- TorchVision - biblioteka rodziny PyTorch udostępniająca gotowe datasety, wytrenowane modele wyspecjalizowane w używaniu przy wizji komputerowej.
+
+Po uruchomieniu program inicjuje wybrany wytrenowany model oraz przygotowuje niezbędą konfiguracę do obslugi kamery Realsense.  Po sprawdzeniu obecności sprzętu uruchamiana jest pętla, której zadaniem jest zniwelowanie degradacji kolorów, która wystpuje od razu po włączeniu kamery i zanika z czasem. Po odczekaniu nieznaczenj chwili pobierane jest zdjęcie i informacje o głebi, które poslużą do stworzenia mapy.
+
+Operacje na obrazie:
+
+1. Transformacja obrazu na tablicę bibliotekii Numpy
+2. Generowanie kolorów, którymi będą kolorowane dane pixele w celu oznaczenia przynależności do klasy
+3. Segmentacja obrazu z naniesieniem kolorów
+4. Wyswietlenie obrazu pobranego oraz po segmentacji
+5. Naniesienie chmury punktów 3d z czujników odległości
+6. Zapis otrzymanych punktów do pliku 3d_map.ply
+
+### 3.3 Użyte modele
+
+- resnet50
+- resnet101
+- mobilenet_v3_large
+- vgg16
 
 ## Prypisy
 
