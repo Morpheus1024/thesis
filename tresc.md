@@ -4,14 +4,14 @@
 
 ### 1.1 Cel Pracy
 
-W niniejszej pracy przedstawiono proces tworzenia i operowania na trójwymiarowej mapie semantycznej na podstawie danych pochodzących z kamery RGP-D Intel RealSense.
-Używając dostępnych bibliotek udostępnionych przez producenta odczytano dane z kamery, które posłużyły jako podstawa do tworzenia mapy semantycznej. Następnie, przez odpowiednią obróbkę danych jak i wykorzystanie dostępnych otwartoźródłowo modeli dokonano segmentacji obiektów widzianych przez kamerę.
+W niniejszej pracy przedstawiono proces tworzenia i operowania na trójwymiarowej mapie semantycznej na podstawie danych pochodzących z kamery RGPB-D Intel RealSense D435.
+Używając dostępnych bibliotek udostępnionych przez producenta odczytano dane z kamery, które posłużyły jako podstawa do tworzenia mapy semantycznej. Następnie, przez odpowiednią obróbkę danych jak i wykorzystanie dostępnych otwartoźródłowo modeli dokonano segmentacji obiektów widzianych przez kamerę. Na tej podstawie stworzono trójwymiarową mapę semantyczną widzianego obrazu.
 
 ### 1.2  Definicja segmentacji semantycznej
 
 Segmentacja semantyczna jest podzadaniem segmentacji panoptycznej, którą definiuje się jako przypisanie każdemu pixelowi analizowanego obrazu etykiety semantycznej oraz identyfikacji każdej z instancji występującej na obrazie. Etykiety są zazwyczaj dzielone na te opisujące na obiektach policzalnych - ang. things - np. osoby, samochody, drzewa, oraz obiektach niepoliczalnych i amorficznych - ang. stuff - takie jak niebo, droga. [przypis 2. rozdział 1]. Operacje segmentacji wykonywane tych drugich są określane mianem segmentacji semantycznej [przypis 1. rozdział 1.].
 
-### 1.3 Opis kamery stereosokopowej
+### 1.3 Opis kamery
 
 Kamera wykorzystana w niniejszej pracy to Intel® RealSense™ Depth Camera D435. Wyposarzona jest ona w klasyczy obiektyw RGB jak i oprzyrządowanie do odczytania informacji o głębi obrazu. Wykorzystuje do tego rzutnik punktów widocznych w podczerwieni, których pozycja jest określana przez stereoskopowe czujniki podczerwieni. Producent określa odległość roboczą przyrządu od 30 cm do 3 m. [przypis 3. specyfikacja techniczna]
 
@@ -38,21 +38,27 @@ Celem autorów Transformers było stowrzenie hubu wytrenowanych modeli w celu u�
 
 Modele dostępne w Transformers można zainstalować poprzez instalację biblioteki PyTorch, Tensorflow oraz Flex jak i poprzez bezpośrednie pobranie ze strony projektu na Githubie.
 
+### 2.2 YOLO
+
 ## 3. Program tworzący i operujący na trójwymiarowej mapie semantycznej
 
 ### 3.1 Opracowanie teorii
 
-Po uzyskaniu obrazu z kamery należy podać go operacji modelem wytrenowanym w celu segmentacji semantycznej. W efekcie otrzymano informacje na temat przynależności danego pixela obrazu do klasy np. człowieka, samochodu itp. Kolejnym etapem jest dodanie informacji o głebi z czujników na segmentowany obraz.
+
 
 ### 3.2 Opis programu
 
-Program został napisany w języku Python 3.9. Użyto tej wersji z uwagi na obsługę bibliotek kamery Intel Realsense. Wykorzystano następujące biblioteki:
+Po uzyskaniu obrazu z kamery należy podać go operacji modelem wytrenowanym w celu segmentacji semantycznej. W efekcie otrzymano informacje na temat przynależności danego pixela obrazu do klasy np. człowieka, samochodu itp. Kolejnym etapem jest dodanie informacji o głebi z czujników na segmentowany obraz.
+
+Program został napisany w języku Python. Wykorzystano następujące biblioteki:
 
 - pyrealsense2 - biblioteka pozwalająca na łatwy dostęp do obrazu i informacji o jego głębi z kamery Intel Realsense
 - NumPy - biblioteka do obliczeń numerycznych
 - OpenCV - otwartoźródłowa biblioteka do operacji na obrazach
 - PyTorch - biblioteka udostaępniajaca pretrenowane modele AI z frameworka transformers
 - TorchVision - biblioteka rodziny PyTorch udostępniająca gotowe datasety, wytrenowane modele wyspecjalizowane w używaniu przy wizji komputerowej.
+- Ultralitics - biblioteka udostępniająca gotowe modele YOLO wyspecjalizowane w używaniu przy wizji komputerowej.
+- Matplotib - biblioteka szeroko stosowana do rysowania wykresości i wizualizacji danych.
 
 Po uruchomieniu program inicjuje wybrany wytrenowany model oraz przygotowuje niezbędą konfiguracę do obslugi kamery Realsense.  Po sprawdzeniu obecności sprzętu uruchamiana jest pętla, której zadaniem jest zniwelowanie degradacji kolorów, która wystpuje od razu po włączeniu kamery i zanika z czasem. Po odczekaniu nieznaczenj chwili pobierane jest zdjęcie i informacje o głebi, które poslużą do stworzenia mapy.
 
@@ -71,6 +77,9 @@ Operacje na obrazie:
 - resnet101
 - mobilenet_v3_large
 - vgg16
+- modele rodziny yolov8-seg, yolo9-seg
+
+### 3.4 Wizualizajc adanych
 
 ## Prypisy
 

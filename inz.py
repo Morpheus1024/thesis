@@ -4,11 +4,16 @@ import cv2
 import torch
 import torchvision
 from torchvision import transforms
+import matplotlib.pyplot as plt
 
 #model = torch.hub.load('pytorch/vision:v0.10.0', 'deeplabv3_resnet50', pretrained=True)
 #model = torch.hub.load('pytorch/vision:v0.10.0', 'deeplabv3_resnet101', pretrained=True)
 model = torch.hub.load('pytorch/vision:v0.10.0', 'deeplabv3_mobilenet_v3_large', pretrained=True)
 #model = torchvision.models.vgg16(pretrained=True)
+model = torch.hub.load('pytorch/vision:v0.10.0', 'yolov8n', pretrained=True)
+model = torch.hub.load('pytorch/vision:v0.10.0', 'yolov8s', pretrained=True)
+model
+#model = model.cuda()
 
 
 model.eval()
@@ -116,22 +121,26 @@ try:
 
         point_cloud = np.array(point_cloud)
 
+        #wizulizacja chmury punktów 3D przez matplotliba
+
+        
+
         # Zapisanie chmury punktów do pliku PLY
-        with open("3d_map.ply", 'w') as file:
-            file.write("ply\n")
-            file.write("format ascii 1.0\n")
-            file.write(f"element vertex {len(point_cloud)}\n")
-            file.write("property float x\n")
-            file.write("property float y\n")
-            file.write("property float z\n")
-            file.write("property uchar red\n")
-            file.write("property uchar green\n")
-            file.write("property uchar blue\n")
-            file.write("end_header\n")
-            for point in point_cloud:
-                file.write(f"{point[0]} {point[1]} {point[2]} {int(point[3])} {int(point[4])} {int(point[5])}\n")
-        cv2.imshow('Segmented Image', image_to_show)
-        key = cv2.waitKey(0)
+        # with open("3d_map.ply", 'w') as file:
+        #     file.write("ply\n")
+        #     file.write("format ascii 1.0\n")
+        #     file.write(f"element vertex {len(point_cloud)}\n")
+        #     file.write("property float x\n")
+        #     file.write("property float y\n")
+        #     file.write("property float z\n")
+        #     file.write("property uchar red\n")
+        #     file.write("property uchar green\n")
+        #     file.write("property uchar blue\n")
+        #     file.write("end_header\n")
+        #     for point in point_cloud:
+        #         file.write(f"{point[0]} {point[1]} {point[2]} {int(point[3])} {int(point[4])} {int(point[5])}\n")
+        # cv2.imshow('Segmented Image', image_to_show)
+        # key = cv2.waitKey(0)
 
         break
 
