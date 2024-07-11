@@ -105,7 +105,7 @@ Operacje na obrazie:
 
  11. [mmdetection](https://github.com/open-mmlab/mmdetection)
 
-## Notatki z tekstów skazanych przez Doktora
+## Notatki z przeglądu literatury
 
 ### Segmentacje - definicje
 
@@ -137,3 +137,8 @@ Opisują podstaę działania YOSO - piramidę agregującą cechy (feature pyrami
 Użyte datasety: COCO, Cityscapes, ADEK20K, Mapilliary Vistas.
 Metryka ewaluacji: Panoptic quality, która może zostać zdekomponowana do segmentation quality i recognition quality.
 Resultat: udao się osiągnąć lepsze resultaty niż w innych frameworkach przy zachowaniu "competitive panoptic quality preformence"
+
+### PanoOcc: Unified Occupancy Representation for Camera-based 3D Panoptic Segmentation
+
+PanoOcc - metoda oparta na agregacji informacji z wokseli w celu zrozumienia
+
