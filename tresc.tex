@@ -1,0 +1,268 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+\usepackage[bidi=basic]{babel}
+\else
+\usepackage[bidi=default]{babel}
+\fi
+% get rid of language-specific shorthands (see #6817):
+\let\LanguageShortHands\languageshorthands
+\def\languageshorthands#1{}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdflang={und},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\author{}
+\date{}
+
+\begin{document}
+
+\section{Praca inżynierska}\label{praca-inux17cynierska}
+
+\subsection{1. Wstęp}\label{wstux119p}
+
+\subsubsection{1.1 Cel Pracy}\label{cel-pracy}
+
+W niniejszej pracy przedstawiono proces tworzenia i operowania na trójwymiarowej mapie semantycznej na podstawie danych pochodzących z kamery RGPB-D Intel RealSense D435.
+Używając dostępnych bibliotek udostępnionych przez producenta odczytano dane z kamery, które posłużyły jako podstawa do tworzenia mapy semantycznej. Następnie, przez odpowiednią obróbkę danych jak i wykorzystanie dostępnych otwartoźródłowo modeli dokonano segmentacji obiektów widzianych przez kamerę. Na tej podstawie stworzono trójwymiarową mapę semantyczną widzianego obrazu.
+
+\subsubsection{1.2 Definicja segmentacji semantycznej}\label{definicja-segmentacji-semantycznej}
+
+Segmentacja semantyczna jest podzadaniem segmentacji panoptycznej, którą definiuje się jako przypisanie każdemu pixelowi analizowanego obrazu etykiety semantycznej oraz identyfikacji każdej z instancji występującej na obrazie. Etykiety są zazwyczaj dzielone na te opisujące na obiektach policzalnych - ang. things - np. osoby, samochody, drzewa, oraz obiektach niepoliczalnych i amorficznych - ang. stuff - takie jak niebo, droga. {[}przypis 2. rozdział 1{]}. Operacje segmentacji wykonywane tych drugich są określane mianem segmentacji semantycznej {[}przypis 1. rozdział 1.{]}.
+
+\subsubsection{1.3 Opis kamery i biblioteki}\label{opis-kamery-i-biblioteki}
+
+Kamera wykorzystana w niniejszej pracy to Intel® RealSense™ Depth Camera D435. Wyposarzona jest ona w klasyczy obiektyw RGB jak i oprzyrządowanie do odczytania informacji o głębi obrazu. Wykorzystuje do tego rzutnik punktów widocznych w podczerwieni, których pozycja jest określana przez stereoskopowe czujniki podczerwieni. Producent określa odległość roboczą przyrządu od 30 cm do 3 m. {[}przypis 3. specyfikacja techniczna{]}
+Producent dostarcza również bibliotekę librealsense, która pozwala na zmianę domyślnych parametrów kamery. W niniejszej pracy została wykorzystana jej domiana napisana w jezyku Python - pyrealsense. Jest wyposażona w gotowe funkcje do odczytu obrazu RGB i głębi w danych rozdzielczościach, funkcję wyrównywania obu obrazów, czy prostego zapisywania chmury punktów 3d do pliku o rozszerzeniu .ply.
+
+\subsection{2. Przegląd używanych systemów}\label{przeglux105d-uux17cywanych-systemuxf3w}
+
+Z roku na rok powstają coraz nowsze sposoby i podejścia do segmentacji zdjęć i filmów. Poddawane są one testom wydajnościowym na otwartoźródłowych, powszechnie uznanych wśród społeczności zbiorach danych. Trudno nadążyć za najnowyszymi i najwydajniejszymi systemami z uwagi na szybkość zmian jakie zachodzą w tej dziedzinie.
+W tym rozdzialę zostaną opisane jedne z najpopularniejszych używanych systemy segmentacji, które są aktywnie używane w celach segmentacji panoptycznej.
+
+Do najpopularniejszych frameworków segmentacji panoptyczej można zaliczyć transformers {[}przypis 8{]}. Wybrano go z uwagi na dostępność, wsparcie społeczności i popularność na repozytorium Github oraz ciągły rozwój w celu osiągnięcia coraz lepszych wyników wydajności.
+
+\subsubsection{2.1 Transformers}\label{transformers}
+
+Transformers oddaje w ręce użytkownika API, które pozwalają na używanie już wytrenowanych modelu. Framework jest szeroko stosowany w dziedzianch związanych z NLP, audio czy chociażby z wizją komputerową.
+
+Transformers został zaprojektowany by jak najlepiej odwzorować modele potokowe tzn. dokonać wstępnej obróbki danych, poddać je działaniu modelu i dokonać predykcji. Każdy z modeli został zdefiniowan poprzez trzy bloki stanowące rdzeń działąnia całego rameworka: blok tokenizajic danych, blok transformacji (od którego wzięła się nazwa frameworka), oraz z bloku głowy/głów.
+
+Blok tokenizacji - również nazywany tokenizerem - jest odpowiedzialny za nadawanie stokenizowanych klas, które są niezbędne do pracy każdgo modelu. Klasy mogą być już predefiuniowane, ale mogą również zostać dodane przez użytkownika. Przechowuje on listę mapującą token do indeksu.
+
+Blok transformacji ma za zadanie wykonywać zadanie modelu np. generowanie, rozumowanie na podstawie klas powstałych w wyniku tokenizacji w poprzednim bloku. Architektury modeli zostały w taki sposób dobrane, by była możliwość łatwego podnieniania ich bloku transformacji.
+
+Blok głów jest odpowiedzialny za dostosowanie danych otrzymanych z bloku transformacji do danych wyjściowych dostosowanych do danego zadania np. współrzędne bounding boxa. Dodaje on do klasy bazowej warstwę wyjścia oraz funkcję straty. Niektóre bloki obsługują również dodatkowe funkcje takie jak próbkowanie w celu wykonania powieżonego im zadania.
+
+Celem autorów Transformers było stowrzenie hubu wytrenowanych modeli w celu ułatwienia dostępu do nich oraz łatwego aplikowania ich do projektów użytkowników. W 2020 roku hub oferował ponad 2000 modeli, w tym BERT i GPT-2. Na czas pisania tej pracy modeli jest ponad 660000.
+
+Modele dostępne w Transformers można zainstalować poprzez instalację biblioteki PyTorch, Tensorflow oraz Flex jak i poprzez bezpośrednie pobranie ze strony projektu na Githubie.
+
+\subsubsection{2.2 YOLO}\label{yolo}
+
+\subsection{3. Metody tworzenia trójwymiarowej mapy semantycznej i jej wizualizacji}\label{metody-tworzenia-truxf3jwymiarowej-mapy-semantycznej-i-jej-wizualizacji}
+
+\subsubsection{3.1 Opis stosowanych metod tworzenia trójwymiarowej mapy semantycznej}\label{opis-stosowanych-metod-tworzenia-truxf3jwymiarowej-mapy-semantycznej}
+
+Tworzenie trójwymiarowej mapy semantycznej opiera się na połączeniu informacji pochodzących z segmegmentowanego obrazu 2D z danymi o głębi scenerii. Aktualnie opracowano wiele metod, które pozwalają na osiągnięcie różnych efektów. Wyróżnić można m.in. prostą projekcję, metody iteracyjne, geometryczne, metody wykorzytsujące seii neuronowe czy fuzję wielosensorowe.
+
+\paragraph{3.1.1 Projekcja prosta}\label{projekcja-prosta}
+
+Projekcja prosta jest zdecydowanie najłatwojeszą metodą do zaimplementowania. Polega na odwozorowaniu pikseli segmentowanego obrazu bądż z maski pochodzącej z segmentacji na odpowiadające im punkty chmury glębi.
+Metoda cechuje się prostotą, szybkościa implementacji oraz intuicyjnością. Nie mniej, zawiera wady w podtacji braku uwzględnienia szczegółów geometrii obiektów i braku uwzględnienia niedoskonałości danych, w szczególności szumów pochodzących z odczytu głębi.
+
+\paragraph{3.1.2 Metoda iteracyjne}\label{metoda-iteracyjne}
+
+\paragraph{3.1.3 Metoda geometryczna}\label{metoda-geometryczna}
+
+\subsubsection{3.1.4 Metoda wykorzystująca seii neuronowe}\label{metoda-wykorzystujux105ca-seii-neuronowe}
+
+\paragraph{3.1.5 Metoda fuzji wielosensorowej}\label{metoda-fuzji-wielosensorowej}
+
+\subsubsection{3.2 Sposób wizualizacji danych}\label{sposuxf3b-wizualizacji-danych}
+
+\subsection{4. Program tworający i operujący na trójwymiarowej mapie semantycznej}\label{program-tworajux105cy-i-operujux105cy-na-truxf3jwymiarowej-mapie-semantycznej}
+
+\subsubsection{4.1 Opis programu}\label{opis-programu}
+
+Po uzyskaniu obrazu z kamery należy podać go operacji wytrenowanym modelem w celu segmentacji semantycznej. W efekcie otrzymano informacje na temat przynależności danego pixela obrazu do klasy np. człowieka, samochodu itp. Na tej podstawie tworzona jest maska segmentacji. Kolejnym etapem jest dodanie informacji o głebi z czujników na segmentowany obraz.
+
+Program został napisany w języku Python. Wykorzystano następujące biblioteki:
+
+\begin{itemize}
+\tightlist
+\item
+  pyrealsense2 - biblioteka pozwalająca na łatwy dostęp do obrazu i informacji o jego głębi z kamery Intel Realsense
+\item
+  NumPy - biblioteka do obliczeń numerycznych
+\item
+  OpenCV - otwartoźródłowa biblioteka do operacji na obrazach
+\item
+  PyTorch - biblioteka udostaępniajaca pretrenowane modele AI z frameworka transformers
+\item
+  TorchVision - biblioteka rodziny PyTorch udostępniająca gotowe datasety, wytrenowane modele wyspecjalizowane w używaniu przy wizji komputerowej.
+\item
+  Ultralitics - biblioteka udostępniająca gotowe modele YOLO wyspecjalizowane w używaniu przy wizji komputerowej.
+\item
+  Matplotib - biblioteka szeroko stosowana do rysowania wykresości i wizualizacji danych.
+\end{itemize}
+
+Po uruchomieniu program inicjuje wybrany wytrenowany model oraz przygotowuje niezbędą konfiguracę do obslugi kamery Realsense. Po sprawdzeniu obecności sprzętu uruchamiana jest pętla, której zadaniem jest zniwelowanie degradacji kolorów, która wystpuje od razu po włączeniu kamery i zanika z czasem. Po odczekaniu nieznaczenj chwili pobierane jest zdjęcie i informacje o głebi, które poslużą do stworzenia mapy.
+
+Operacje na obrazie:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Transformacja obrazu na tablicę bibliotekii Numpy
+\item
+  Generowanie kolorów, którymi będą kolorowane dane pixele w celu oznaczenia przynależności do klasy
+\item
+  Segmentacja obrazu z naniesieniem kolorów
+\item
+  Wyswietlenie obrazu pobranego oraz po segmentacji
+\item
+  Naniesienie chmury punktów 3d z czujników odległości
+\item
+  Zapis otrzymanych punktów do pliku 3d\_map.ply
+\end{enumerate}
+
+\subsubsection{4.2 Użyte modele}\label{uux17cyte-modele}
+
+\begin{itemize}
+\tightlist
+\item
+  resnet50
+\item
+  resnet101
+\item
+  mobilenet\_v3\_large
+\item
+  vgg16
+\item
+  modele rodziny yolov8-seg, yolo9-seg
+\end{itemize}
+
+\subsubsection{4.3 Wizualizajc adanych}\label{wizualizajc-adanych}
+
+\subsection{Prypisy}\label{prypisy}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  Kirillov, A., He, K., Girshick, R., Rother, C., \& Dollár, P. (2019). Panoptic segmentation. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition (pp.~9404-9413)
+\item
+  Hu, J., Huang, L., Ren, T., Zhang, S., Ji, R., \& Cao, L. (2023). You Only Segment Once: Towards Real-Time Panoptic Segmentation. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (pp.~17819-17829)
+\item
+  \href{https://www.intelrealsense.com/depth-camera-d435/}{Strona prezentujaca kemerę}
+\item
+  \href{https://github.com/shichaoy/semantic_3d_mapping?tab=readme-ov-file}{Github z 3d semantic map} - powiązana prac: Shichao Yang, Yulan Huang and Sebastian Scherer (2017) Semantic 3D Occupancy Mapping through Efficient High Order CRFs
+\item
+  \href{https://paperswithcode.com/task/panoptic-segmentation}{SOTA z bechmarkami systemów panoptycznych}
+\item
+  \href{https://paperswithcode.com/task/semantic-segmentation}{SOTA z benchmarkami systemów semantycznych}
+\item
+  \href{https://paperswithcode.com/task/3d-semantic-segmentation}{SOTA z benchmarkami systemów semnatycznych 3D}
+\item
+  \href{https://github.com/huggingface/transformers}{Transformers by huggingface} \href{https://aclanthology.org/2020.emnlp-demos.6.pdf}{papier}
+\item
+  \href{https://github.com/huggingface/pytorch-image-models?tab=readme-ov-file}{PyTorch Image Models}
+\item
+  \href{https://github.com/facebookresearch/detectron2}{Datacron2} \href{https://github.com/facebookresearch/detectron2/blob/main/MODEL_ZOO.md}{papier}
+\item
+  \href{https://github.com/open-mmlab/mmdetection}{mmdetection}
+\end{enumerate}
+
+\subsection{Notatki z przeglądu literatury}\label{notatki-z-przeglux105du-literatury}
+
+\subsubsection{Segmentacje - definicje}\label{segmentacje---definicje}
+
+\begin{itemize}
+\tightlist
+\item
+  instance segmentation - detect and segment each object instance
+\item
+  semantic segmentation - assign a clas label to each pixel
+\item
+  panoptic segmentation - task that involves assigning a semanic label and an identity to each pixel of an input image
+\item
+  semantic label - labels that classifie stuff like sky, road and things like person, cars.
+\end{itemize}
+
+\subsubsection{Semantic 3D Occupancy Mapping through Efficient High Order CRFs}\label{semantic-3d-occupancy-mapping-through-efficient-high-order-crfs}
+
+Gdzie stosuje się 3D mapy semantyczne - w wielu zadaniach związanych z robotyką np. autonomiczne poruszanie się. Jest to zadania trudne, bo wymaga jednoczesnego wykonywania obliczeń gemoetrycznych jaki i segmentacji semantycznej obrazu. Szybkość wykonywania segmentacji semantycznej na dwuwymiarowych obrazach znacząco poprawiła się wraz z rozwojem konwolucyjnych sieci neuronoych, lecz nadal napotyka się problemy z dokładnością rozróżniania okluzji i cieni.
+W tej pracy posłużono się dwoma obrazami RGB, a nie kamerą RGBD. Uargumentowano wybór tym, owe urządzenia można stosować jedynie w zamkniętych pomieszczeniach, na małym obszarze roboczym. Użyto konwolucyjnej sieci neuronowej w celu przetransferowania etykiet semantycznych z obrazu 2D na przestrzeń 3D. W efekcie zrekonstruowano mapę 3D na podstaiwe dwóch obrazów 2D i dokonano segmentacji jej obiektów.
+
+\subsubsection{Panoptic Segmentation}\label{panoptic-segmentation}
+
+Segmentacja panoptyczna - przypisanie etykiety do każdrgo pixela obrazu
+Propozycja miary jakości panoptycznej - ujęcie wydajności każdej z etykiet w ujednolicony i interpretowalny sposób. Miara jakości predykcji panoptycznej w stosunku do ``ground truth''. IoU (intersection over union) \textgreater0.5,następnie suma ważona FP, FN, FP ze wszytskich etykiet.
+Instance segmentation - wykrywanie obieków - zakreślanie je w bounding boxy
+Segmentqacja panoptyczna - segmentacja semantyczna wraz z segmentacją instancji - każdemu pixelowi jest przypisywana klasa jak i instacncja np. każde auto ma label auto, ale są rozpoznawane poszczegolne auta jako auto A, B, C itd. Pixele o tej samej etykiecie jak i ID instacji należą do tego samego objektu.
+Użyte datasety: PASCAL VOD, COCO, Cityscapes, ADE20k, Mapillary Vistas
+
+Zbiór etykiet things i etykiet stuff się wyklucza, ale razem tworzą zbór etykiet semsntycznych.
+
+\subsubsection{Yout Only Segment Once: Toward Reals-Time Panoptic Segmentation}\label{yout-only-segment-once-toward-reals-time-panoptic-segmentation}
+
+YOSO - real time segmentation framework. Predykcja mask poprzez konwolucję i mapę cech obrazu (feature image map). Chwalą się, że należy tylko raz dokonać segmentacji semantycznej i instancji.
+Opisują Real-Time Instance Segmentation, Real-Time Panoptic Segmentation, Real-Time Semantic Segmentation. Przytacają przykładu powiązanych prac o tej tematyce.
+Opisują podstaę działania YOSO - piramidę agregującą cechy (feature pyramid aggregator), która kompresuje i agreguje wielowarstwowe mapy cech do jednowarstwowej.
+Użyte datasety: COCO, Cityscapes, ADEK20K, Mapilliary Vistas.
+Metryka ewaluacji: Panoptic quality, która może zostać zdekomponowana do segmentation quality i recognition quality.
+Resultat: udao się osiągnąć lepsze resultaty niż w innych frameworkach przy zachowaniu ``competitive panoptic quality preformence''
+
+\subsubsection{PanoOcc: Unified Occupancy Representation for Camera-based 3D Panoptic Segmentation}\label{panoocc-unified-occupancy-representation-for-camera-based-3d-panoptic-segmentation}
+
+PanoOcc - metoda oparta na agregacji informacji z wokseli w celu zrozumienia
+
+\end{document}
