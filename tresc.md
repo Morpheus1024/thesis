@@ -43,7 +43,7 @@ Modele dostępne w Transformers można zainstalować poprzez instalację bibliot
 
 ## 3. Metody tworzenia trójwymiarowej mapy semantycznej i jej wizualizacji
 
-### 3.1 Opis stosowanych metod tworzenia trójwymiarowej mapy semantycznej
+### 3.1 Opis metod tworzenia trójwymiarowej mapy semantycznej
 
 Tworzenie trójwymiarowej mapy semantycznej opiera się na połączeniu informacji pochodzących z segmegmentowanego obrazu 2D z danymi o głębi scenerii. Aktualnie opracowano wiele metod, które pozwalają na osiągnięcie różnych efektów. Wyróżnić można m.in. prostą projekcję, metody iteracyjne czy geometryczne.
 
@@ -61,7 +61,13 @@ Rozwinięciem metody projekcji prostej jest iteracyjne udoskonalanie dopasowania
 Odmienne podejście jest stosowane w metodach geometrycznych. W nich podstawą działania algorytmu są uproszczone modele geometryczne zwane prymitywami. Na początku algorytm stosuje się segmentację regionów na podstawie maski segmentacji w celu sprawdzenia spójności regionów odpowiadającym poszczególnym obiektom. Następnie dla każdego regionu określa się prymityw np. prostopadłościan, który następnie jest zoptymalizowany pod kątem odpowiadania danym głębi i maski.
 Ta metoda jest bardziej efektywna niż algorytmy iteracyjne dla prostych obiektów, o nieskomplikowanym kształcie. Zależy ona jednak od jakości maski semantycznej i chmury punktów.
 
+#### 3.1.4 Metoda wyrównywania wbudowana w bibliotekę realsense
+
+
+
 ### 3.2 Sposób wizualizacji danych
+
+Jednym z najczęściej spotykanych sposobów wizualizacji danych zawierających informacje o głębi scenerii jest stosowanie chmury punktów. Polega ona na umiejscowieniu punktów np. w trójwymiarowym układzie odniesienia w celu przekazania informacji o głębi. W celu dodania innych informacji często dane punkty są kolorowane na różne barwy. Dzięki temu można łatwo zwizualizować zdjęcia wraz z  zarejestrowaną głębią. Kolory mogą również być przypisane do danej etytkiety przez co otrzymuje się zsegmentowaną chmurę pubnktów.
 
 ## 4. Program tworzący i operujący na trójwymiarowej mapie semantycznej
 
