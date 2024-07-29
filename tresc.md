@@ -181,20 +181,20 @@ PanoOcc - metoda oparta na agregacji informacji z wokseli w celu zrozumienia
 ### Point Transformer V3: Simpler, Faster, Stronger
 
 Zasada działania:
-1. Chmura punktów jest normalizowana przed podaniem ich do operatora. Ujednolica to dane do treningu modelu. Stosowana jest normalizajcja warstw zamiast normalizacja batchy.
+1. Chmura punktów jest normalizowana przed podaniem ich do operatora. Ujednolica to dane do treningu modelu. Stosowana jest normalizacja warstw zamiast normalizacja batchy.
 2. Nadal używany jest grid pooling wzięty z poprzedniego modelu PTv2.
 3. Dodatkowa warstwa konwolucyjna pozwalająca na zamianę kodowania pozycji (Relative Position Encoding) na xCPE (enhnced Conditional Position Embedding), co daje lepsze wyniki przy minimalnie większym nakładzie obliczeniowym
 
-Model jest rozwinięciem idei stojącej za PTv2. Jest szybszy a za razem zachowuje elastyczność i prostotę.
+Model jest rozwinięciem idei stojącej za PTv2. Jest szybszy a zarazem zachowuje elastyczność i prostotę.
 
 ### OneFormer3D: One Transformer for Unified Point Cloud Segmentation
 
-Użycie backbone z U-Neta i połączenie z dekoderem transformer w celu zwiększenia wydajności (czasu i pamieci) - pierwsze takie połączenie.
+Użycie backbone z U-Neta i połączenie z dekoderem transformer w celu zwiększenia wydajności (czasu i pamięci) - pierwsze takie połączenie.
 Framework jest dziedziczony z SPFormer z uwagi na prostotę pipelineu, mały nakład pamięci, szybko interface (fast interface).
 Zasada działania:
 1. Najpierw 3d U-Net wyodrębnia cechy z punktów. Analizowany jest kolor RGB punktu oraz jego położenie w przestrzeni.
 2. Uśrednienie cech punktów przez "flexible pooling" i łączenie punktów w "superpunkty". 
-3. Cechy superpunktów są podawane do dekodera transformera - dokładniej to 6 warst dekodera. Oprócz nich można również podać zapytania semantyczne i instancyjne w celu trenowania modelu.
+3. Cechy superpunktów są podawane do dekodera transformera - dokładniej to 6 warstw dekodera. Oprócz nich można również podać zapytania semantyczne i instancyjne w celu trenowania modelu.
 4. Decoder zwraca zestaw kerneli. Każdy z nich reprezentuje segmentowaną maskę obiektu/przedmiotu. Może to być maska po segmentacji ponoptycznej, semantycznej lub instancyjnej.
 
 Na moment pisania tego fragmentu pracy OneFormer3D jest notowany jako najlepszy model, który został sprawdzony na datasecie S3DIS pod kątem segmentacji semantycznej 3D oraz jako najlepszy model pod kontem segmentacji panoptycznej na datasecie ScanNet.
