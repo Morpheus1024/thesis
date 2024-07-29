@@ -23,7 +23,9 @@ W tym rozdziale zostaną opisane jedne z najpopularniejszych używanych systemy 
 
 Do najpopularniejszych frameworków segmentacji panoptycznej można zaliczyć transformers [przypis 8]. Wybrano go z uwagi na dostępność, wsparcie społeczności i popularność na repozytorium Github oraz ciągły rozwój w celu osiągnięcia coraz lepszych wyników wydajności.
 
-### 2.1 Transformers
+### 2.1 Modele segmentacji semnatycznej
+
+#### 2.1.1 Transformers
 
 Transformers oddaje w ręce użytkownika API, które pozwalają na używanie już wytrenowanych modelu. Framework jest szeroko stosowany w dziedzinach związanych z NLP, audio czy chociażby z wizją komputerową.
 
@@ -39,7 +41,15 @@ Celem autorów Transformers było stworzenie hubu wytrenowanych modeli w celu u�
 
 Modele dostępne w Transformers można zainstalować poprzez instalację biblioteki PyTorch, Tensorflow oraz Flex jak i poprzez bezpośrednie pobranie ze strony projektu na Githubie.
 
-### 2.2 YOLO
+#### 2.1.2 YOLO
+
+### 2.2 Modele segmentacji semantycznej 3D
+
+#### 2.2.1 Point Transformer V3
+
+#### 2.2.2 OneFormer3D: One Transformer for Unified Point Cloud Segmentation
+
+
 
 ## 3. Metody tworzenia trójwymiarowej mapy semantycznej i jej wizualizacji
 
@@ -167,4 +177,25 @@ Resultat: udao się osiągnąć lepsze resultaty niż w innych frameworkach przy
 ### PanoOcc: Unified Occupancy Representation for Camera-based 3D Panoptic Segmentation
 
 PanoOcc - metoda oparta na agregacji informacji z wokseli w celu zrozumienia
+
+### Point Transformer V3: Simpler, Faster, Stronger
+
+Zasada działania:
+1. Chmura punktów jest normalizowana przed podaniem ich do operatora. Ujednolica to dane do treningu modelu. Stosowana jest normalizajcja warstw zamiast normalizacja batchy.
+2. Nadal używany jest grid pooling wzięty z poprzedniego modelu PTv2.
+3. Dodatkowa warstwa konwolucyjna pozwalająca na zamianę kodowania pozycji (Relative Position Encoding) na xCPE (enhnced Conditional Position Embedding), co daje lepsze wyniki przy minimalnie większym nakładzie obliczeniowym
+
+Model jest rozwinięciem idei stojącej za PTv2. Jest szybszy a za razem zachowuje elastyczność i prostotę.
+
+### OneFormer3D: One Transformer for Unified Point Cloud Segmentation
+
+Użycie backbone z U-Neta i połączenie z dekoderem transformer w celu zwiększenia wydajności (czasu i pamieci) - pierwsze takie połączenie.
+Framework jest dziedziczony z SPFormer z uwagi na prostotę pipelineu, mały nakład pamięci, szybko interface (fast interface).
+Zasada działania:
+1. Najpierw 3d U-Net wyodrębnia cechy z punktów. Analizowany jest kolor RGB punktu oraz jego położenie w przestrzeni.
+2. Uśrednienie cech punktów przez "flexible pooling" i łączenie punktów w "superpunkty". 
+3. Cechy superpunktów są podawane do dekodera transformera - dokładniej to 6 warst dekodera. Oprócz nich można również podać zapytania semantyczne i instancyjne w celu trenowania modelu.
+4. Decoder zwraca zestaw kerneli. Każdy z nich reprezentuje segmentowaną maskę obiektu/przedmiotu. Może to być maska po segmentacji ponoptycznej, semantycznej lub instancyjnej.
+
+Na moment pisania tego fragmentu pracy OneFormer3D jest notowany jako najlepszy model, który został sprawdzony na datasecie S3DIS pod kątem segmentacji semantycznej 3D oraz jako najlepszy model pod kontem segmentacji panoptycznej na datasecie ScanNet.
 
