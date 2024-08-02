@@ -19,9 +19,10 @@ Producent dostarcza również bibliotekę librealsense, która pozwala na zmian�
 ## 2. Przegląd używanych systemów
 
 Z roku na rok powstają coraz nowsze sposoby i podejścia do segmentacji zdjęć i filmów. Poddawane są one testom wydajnościowym na otwartoźródłowych, powszechnie uznanych wśród społeczności zbiorach danych. Trudno nadążyć za najnowyszymi i najwydajniejszymi systemami z uwagi na szybkość zmian jakie zachodzą w tej dziedzinie.
-W tym rozdziale zostaną opisane jedne z najpopularniejszych używanych systemy segmentacji, które są aktywnie używane w celach segmentacji panoptycznej.
+W tym rozdziale zostaną opisane jedne z najpopularniejszych używanych systemy segmentacji, które są aktywnie używane w tym celu.
 
-Do najpopularniejszych frameworków segmentacji panoptycznej można zaliczyć transformers [przypis 8]. Wybrano go z uwagi na dostępność, wsparcie społeczności i popularność na repozytorium Github oraz ciągły rozwój w celu osiągnięcia coraz lepszych wyników wydajności.
+
+(prawdopodobnie do wywalenia) Do najpopularniejszych frameworków segmentacji panoptycznej można zaliczyć transformers [przypis 8]. Wybrano go z uwagi na dostępność, wsparcie społeczności i popularność na repozytorium Github oraz ciągły rozwój w celu osiągnięcia coraz lepszych wyników wydajności.
 
 ### 2.1 Modele segmentacji semnatycznej
 
@@ -43,12 +44,23 @@ Modele dostępne w Transformers można zainstalować poprzez instalację bibliot
 
 #### 2.1.2 YOLO
 
+brak papierów o yolov8.
+
+[dostępne papiery](https://arxiv.org/pdf/2304.00501v1)
+
 ### 2.2 Modele segmentacji semantycznej 3D
+
+Oprócz klasycznych modeli zajmujących się segmentacją obrazów trzeba również wyróżnić modele specjalizujące się segmentacją chmur punktów, zawierających oprócz informacji o kolorach również dane o głębi zarejestrowanego obrazu. Są one o wiele mniej popularne z uwagi na znacznie rzadsze koszystanie z obrazów RGBD - więcej osób posiada obiektywy do wykonywania zdjęć 2D, w szczególności smartfony, niż sprzęt pozwalający na pozyskanie danych o głębi zdjęcia. Postanowiono na opisanie zasady działania modeli, które odznaczyły się w testach wydajnościowych w momencie pisania tej pracy na zbiorach SemanticKITTI, ScanNet200, ScanNet++ - PTv3 + PTT, oraz S3DIS - OneFormer3D.
 
 #### 2.2.1 Point Transformer V3
 
-#### 2.2.2 OneFormer3D: One Transformer for Unified Point Cloud Segmentation
 
+
+#### 2.2.2 OneFormer3D
+
+OneFormer3D jest określany przez twórców jako model do ujednoliconej segmentacji chmury punktów. Chwalą się, że jako pierwszy model łączy backbone z U-Net z dekoderem tranformer, co daje wzrot wydajności pod kątem czasu operacji i bardziej zoptymalizowanego użycia pamięci.
+Zasada działania modelu wygląda w następujący sposób:
+Na podstawie koloru oraz położenia danego punktu w przestrzeni ekstraktowane są cechy chmury przez 3D U-Net. Następnie chechy punktów są uśredniane za pomocą "flexible poolingu", a same punkty są łączone w nazywane przez autorów superpunkty. Cechy tych punktów są przekazywane do dekodera o 6 warstwach. W celu trenowania sieci można również podać dodatkowe zapytania semantyczne i instancyjne. Dekoder zwraca zestaw kernel segmentowanych masek obiektów ze zdjęcia. Mogą to być maski będące wynikiem segmentacji instancyjnej, semantycznej czy panoptycznej.
 
 
 ## 3. Metody tworzenia trójwymiarowej mapy semantycznej i jej wizualizacji
@@ -140,6 +152,8 @@ Operacje na obrazie:
  10. [Datacron2](https://github.com/facebookresearch/detectron2) [papier](https://github.com/facebookresearch/detectron2/blob/main/MODEL_ZOO.md)
 
  11. [mmdetection](https://github.com/open-mmlab/mmdetection)
+ 
+ 12. [OneFormer3d](https://arxiv.org/pdf/2311.14405v1), [wpis w paperwithcode.com](https://paperswithcode.com/paper/oneformer3d-one-transformer-for-unified-point) 
 
 ## Notatki z przeglądu literatury
 

@@ -71,68 +71,91 @@
 \subsubsection{1.1 Cel Pracy}\label{cel-pracy}
 
 W niniejszej pracy przedstawiono proces tworzenia i operowania na trójwymiarowej mapie semantycznej na podstawie danych pochodzących z kamery RGPB-D Intel RealSense D435.
-Używając dostępnych bibliotek udostępnionych przez producenta odczytano dane z kamery, które posłużyły jako podstawa do tworzenia mapy semantycznej. Następnie, przez odpowiednią obróbkę danych jak i wykorzystanie dostępnych otwartoźródłowo modeli dokonano segmentacji obiektów widzianych przez kamerę. Na tej podstawie stworzono trójwymiarową mapę semantyczną widzianego obrazu.
+Używając dostępnych bibliotek udostępnionych przez producenta odczytano dane z kamery, które posłużyły jako podstawa do tworzenia mapy semantycznej. Następnie, przez odpowiednią obróbkę danych jak i wykorzystanie dostępnych modeli dokonano segmentacji obiektów widzianych przez kamerę. Na tej podstawie stworzono trójwymiarową mapę semantyczną widzianego obrazu.
 
 \subsubsection{1.2 Definicja segmentacji semantycznej}\label{definicja-segmentacji-semantycznej}
 
-Segmentacja semantyczna jest podzadaniem segmentacji panoptycznej, którą definiuje się jako przypisanie każdemu pixelowi analizowanego obrazu etykiety semantycznej oraz identyfikacji każdej z instancji występującej na obrazie. Etykiety są zazwyczaj dzielone na te opisujące na obiektach policzalnych - ang. things - np. osoby, samochody, drzewa, oraz obiektach niepoliczalnych i amorficznych - ang. stuff - takie jak niebo, droga. {[}przypis 2. rozdział 1{]}. Operacje segmentacji wykonywane tych drugich są określane mianem segmentacji semantycznej {[}przypis 1. rozdział 1.{]}.
+Segmentacja semantyczna jest pod zadaniem segmentacji panoptycznej, którą definiuje się jako przypisanie każdemu pixelowi analizowanego obrazu etykiety semantycznej oraz identyfikacji każdej z instancji występującej na obrazie. Etykiety są zazwyczaj dzielone na te opisujące na obiektach policzalnych - ang. things - np. osoby, samochody, drzewa, oraz obiektach niepoliczalnych i amorficznych - ang. stuff - takie jak niebo, droga. {[}przypis 2. rozdział 1{]}. Operacje segmentacji wykonywane tych drugich są określane mianem segmentacji semantycznej {[}przypis 1. rozdział 1.{]}.
 
 \subsubsection{1.3 Opis kamery i biblioteki}\label{opis-kamery-i-biblioteki}
 
-Kamera wykorzystana w niniejszej pracy to Intel® RealSense™ Depth Camera D435. Wyposarzona jest ona w klasyczy obiektyw RGB jak i oprzyrządowanie do odczytania informacji o głębi obrazu. Wykorzystuje do tego rzutnik punktów widocznych w podczerwieni, których pozycja jest określana przez stereoskopowe czujniki podczerwieni. Producent określa odległość roboczą przyrządu od 30 cm do 3 m. {[}przypis 3. specyfikacja techniczna{]}
-Producent dostarcza również bibliotekę librealsense, która pozwala na zmianę domyślnych parametrów kamery. W niniejszej pracy została wykorzystana jej domiana napisana w jezyku Python - pyrealsense. Jest wyposażona w gotowe funkcje do odczytu obrazu RGB i głębi w danych rozdzielczościach, funkcję wyrównywania obu obrazów, czy prostego zapisywania chmury punktów 3d do pliku o rozszerzeniu .ply.
+Kamera wykorzystana w niniejszej pracy to Intel® RealSense™ Depth Camera D435. Wyposażona jest ona w klasyczny obiektyw RGB jak i oprzyrządowanie do odczytania informacji o głębi obrazu. Wykorzystuje do tego rzutnik punktów widocznych w podczerwieni, których pozycja jest określana przez stereoskopowe czujniki podczerwieni. Producent określa odległość roboczą przyrządu od 30 cm do 3 m. {[}przypis 3. specyfikacja techniczna{]}.
+Producent dostarcza również bibliotekę librealsense, która pozwala na zmianę domyślnych parametrów kamery. W niniejszej pracy została wykorzystana jej odmiana napisana w języku Python - pyrealsense. Jest wyposażona w gotowe funkcje do odczytu obrazu RGB i głębi w danych rozdzielczościach, funkcję wyrównywania obu obrazów, czy prostego zapisywania chmury punktów 3d do pliku o rozszerzeniu .ply.
 
 \subsection{2. Przegląd używanych systemów}\label{przeglux105d-uux17cywanych-systemuxf3w}
 
 Z roku na rok powstają coraz nowsze sposoby i podejścia do segmentacji zdjęć i filmów. Poddawane są one testom wydajnościowym na otwartoźródłowych, powszechnie uznanych wśród społeczności zbiorach danych. Trudno nadążyć za najnowyszymi i najwydajniejszymi systemami z uwagi na szybkość zmian jakie zachodzą w tej dziedzinie.
-W tym rozdzialę zostaną opisane jedne z najpopularniejszych używanych systemy segmentacji, które są aktywnie używane w celach segmentacji panoptycznej.
+W tym rozdziale zostaną opisane jedne z najpopularniejszych używanych systemy segmentacji, które są aktywnie używane w tym celu.
 
-Do najpopularniejszych frameworków segmentacji panoptyczej można zaliczyć transformers {[}przypis 8{]}. Wybrano go z uwagi na dostępność, wsparcie społeczności i popularność na repozytorium Github oraz ciągły rozwój w celu osiągnięcia coraz lepszych wyników wydajności.
+(prawdopodobnie do wywalenia) Do najpopularniejszych frameworków segmentacji panoptycznej można zaliczyć transformers {[}przypis 8{]}. Wybrano go z uwagi na dostępność, wsparcie społeczności i popularność na repozytorium Github oraz ciągły rozwój w celu osiągnięcia coraz lepszych wyników wydajności.
 
-\subsubsection{2.1 Transformers}\label{transformers}
+\subsubsection{2.1 Modele segmentacji semnatycznej}\label{modele-segmentacji-semnatycznej}
 
-Transformers oddaje w ręce użytkownika API, które pozwalają na używanie już wytrenowanych modelu. Framework jest szeroko stosowany w dziedzianch związanych z NLP, audio czy chociażby z wizją komputerową.
+\paragraph{2.1.1 Transformers}\label{transformers}
 
-Transformers został zaprojektowany by jak najlepiej odwzorować modele potokowe tzn. dokonać wstępnej obróbki danych, poddać je działaniu modelu i dokonać predykcji. Każdy z modeli został zdefiniowan poprzez trzy bloki stanowące rdzeń działąnia całego rameworka: blok tokenizajic danych, blok transformacji (od którego wzięła się nazwa frameworka), oraz z bloku głowy/głów.
+Transformers oddaje w ręce użytkownika API, które pozwalają na używanie już wytrenowanych modelu. Framework jest szeroko stosowany w dziedzinach związanych z NLP, audio czy chociażby z wizją komputerową.
 
-Blok tokenizacji - również nazywany tokenizerem - jest odpowiedzialny za nadawanie stokenizowanych klas, które są niezbędne do pracy każdgo modelu. Klasy mogą być już predefiuniowane, ale mogą również zostać dodane przez użytkownika. Przechowuje on listę mapującą token do indeksu.
+Transformers został zaprojektowany by jak najlepiej odwzorować modele potokowe tzn. dokonać wstępnej obróbki danych, poddać je działaniu modelu i dokonać predykcji. Każdy z modeli został zdefiniowany poprzez trzy bloki stanowiące rdzeń działania całego frameworka: blok tokenizacji danych, blok transformacji (od którego wzięła się nazwa frameworka), oraz z bloku głowy/głów.
 
-Blok transformacji ma za zadanie wykonywać zadanie modelu np. generowanie, rozumowanie na podstawie klas powstałych w wyniku tokenizacji w poprzednim bloku. Architektury modeli zostały w taki sposób dobrane, by była możliwość łatwego podnieniania ich bloku transformacji.
+Blok tokenizacji - również nazywany tokenizerem - jest odpowiedzialny za nadawanie stokenizowanych klas, które są niezbędne do pracy każdego modelu. Klasy mogą być już predefiniowane, ale mogą również zostać dodane przez użytkownika. Przechowuje on listę mapującą token do indeksu.
 
-Blok głów jest odpowiedzialny za dostosowanie danych otrzymanych z bloku transformacji do danych wyjściowych dostosowanych do danego zadania np. współrzędne bounding boxa. Dodaje on do klasy bazowej warstwę wyjścia oraz funkcję straty. Niektóre bloki obsługują również dodatkowe funkcje takie jak próbkowanie w celu wykonania powieżonego im zadania.
+Blok transformacji ma za zadanie wykonywać zadanie modelu np. generowanie, rozumowanie na podstawie klas powstałych w wyniku tokenizacji w poprzednim bloku. Architektury modeli zostały w taki sposób dobrane, by była możliwość łatwego podmieniania ich bloku transformacji.
 
-Celem autorów Transformers było stowrzenie hubu wytrenowanych modeli w celu ułatwienia dostępu do nich oraz łatwego aplikowania ich do projektów użytkowników. W 2020 roku hub oferował ponad 2000 modeli, w tym BERT i GPT-2. Na czas pisania tej pracy modeli jest ponad 660000.
+Blok głów jest odpowiedzialny za dostosowanie danych otrzymanych z bloku transformacji do danych wyjściowych dostosowanych do danego zadania np. współrzędne bounding boxa. Dodaje on do klasy bazowej warstwę wyjścia oraz funkcję straty. Niektóre bloki obsługują również dodatkowe funkcje takie jak próbkowanie w celu wykonania powierzonego im zadania.
+
+Celem autorów Transformers było stworzenie hubu wytrenowanych modeli w celu ułatwienia dostępu do nich oraz łatwego aplikowania ich do projektów użytkowników. W 2020 roku hub oferował ponad 2000 modeli, w tym BERT i GPT-2. Na czas pisania tej pracy modeli jest ponad 660000.
 
 Modele dostępne w Transformers można zainstalować poprzez instalację biblioteki PyTorch, Tensorflow oraz Flex jak i poprzez bezpośrednie pobranie ze strony projektu na Githubie.
 
-\subsubsection{2.2 YOLO}\label{yolo}
+\paragraph{2.1.2 YOLO}\label{yolo}
+
+brak papierów o yolov8.
+
+\href{https://arxiv.org/pdf/2304.00501v1}{dostępne papiery}
+
+\subsubsection{2.2 Modele segmentacji semantycznej 3D}\label{modele-segmentacji-semantycznej-3d}
+
+Oprócz klasycznych modeli zajmujących się segmentacją obrazów trzeba również wyróżnić modele specjalizujące się segmentacją chmur punktów, zawierających oprócz informacji o kolorach również dane o głębi zarejestrowanego obrazu. Są one o wiele mniej popularne z uwagi na znacznie rzadsze koszystanie z obrazów RGBD - więcej osób posiada obiektywy do wykonywania zdjęć 2D, w szczególności smartfony, niż sprzęt pozwalający na pozyskanie danych o głębi zdjęcia. Postanowiono na opisanie zasady działania modeli, które odznaczyły się w testach wydajnościowych w momencie pisania tej pracy na zbiorach SemanticKITTI, ScanNet200, ScanNet++ - PTv3 + PTT, oraz S3DIS - OneFormer3D.
+
+\paragraph{2.2.1 Point Transformer V3}\label{point-transformer-v3}
+
+\paragraph{2.2.2 OneFormer3D}\label{oneformer3d}
+
+OneFormer3D jest określany przez twórców jako model do ujednoliconej segmentacji chmury punktów. Chwalą się, że jako pierwszy model łączy backbone z U-Net z dekoderem tranformer, co daje wzrot wydajności pod kątem czasu operacji i bardziej zoptymalizowanego użycia pamięci.
+Zasada działania modelu wygląda w następujący sposób:
+Na podstawie koloru oraz położenia danego punktu w przestrzeni ekstraktowane są cechy chmury przez 3D U-Net. Następnie chechy punktów są uśredniane za pomocą ``flexible poolingu'', a same punkty są łączone w nazywane przez autorów superpunkty. Cechy tych punktów są przekazywane do dekodera o 6 warstwach. W celu trenowania sieci można również podać dodatkowe zapytania semantyczne i instancyjne. Dekoder zwraca zestaw kernel segmentowanych masek obiektów ze zdjęcia. Mogą to być maski będące wynikiem segmentacji instancyjnej, semantycznej czy panoptycznej.
 
 \subsection{3. Metody tworzenia trójwymiarowej mapy semantycznej i jej wizualizacji}\label{metody-tworzenia-truxf3jwymiarowej-mapy-semantycznej-i-jej-wizualizacji}
 
-\subsubsection{3.1 Opis stosowanych metod tworzenia trójwymiarowej mapy semantycznej}\label{opis-stosowanych-metod-tworzenia-truxf3jwymiarowej-mapy-semantycznej}
+\subsubsection{3.1 Opis metod tworzenia trójwymiarowej mapy semantycznej}\label{opis-metod-tworzenia-truxf3jwymiarowej-mapy-semantycznej}
 
-Tworzenie trójwymiarowej mapy semantycznej opiera się na połączeniu informacji pochodzących z segmegmentowanego obrazu 2D z danymi o głębi scenerii. Aktualnie opracowano wiele metod, które pozwalają na osiągnięcie różnych efektów. Wyróżnić można m.in. prostą projekcję, metody iteracyjne, geometryczne, metody wykorzytsujące seii neuronowe czy fuzję wielosensorowe.
+Tworzenie trójwymiarowej mapy semantycznej opiera się na połączeniu informacji pochodzących z segmegmentowanego obrazu 2D z danymi o głębi scenerii. Aktualnie opracowano wiele metod, które pozwalają na osiągnięcie różnych efektów. Wyróżnić można m.in. prostą projekcję, metody iteracyjne czy geometryczne.
 
 \paragraph{3.1.1 Projekcja prosta}\label{projekcja-prosta}
 
-Projekcja prosta jest zdecydowanie najłatwojeszą metodą do zaimplementowania. Polega na odwozorowaniu pikseli segmentowanego obrazu bądż z maski pochodzącej z segmentacji na odpowiadające im punkty chmury glębi.
-Metoda cechuje się prostotą, szybkościa implementacji oraz intuicyjnością. Nie mniej, zawiera wady w podtacji braku uwzględnienia szczegółów geometrii obiektów i braku uwzględnienia niedoskonałości danych, w szczególności szumów pochodzących z odczytu głębi.
+Projekcja prosta jest zdecydowanie najłatwiejszą metodą do zaimplementowania. Polega na odwzorowaniu pikseli segmentowanego obrazu bądź z maski pochodzącej z segmentacji na odpowiadające im punkty chmury głębi.
+Metoda cechuje się prostotą, szybkościa implementacji oraz intuicyjnością. Nie mniej, zawiera wady w postaci braku uwzględnienia szczegółów geometrii obiektów i braku uwzględnienia niedoskonałości danych, w szczególności szumów pochodzących z odczytu głębi.
 
-\paragraph{3.1.2 Metoda iteracyjne}\label{metoda-iteracyjne}
+\paragraph{3.1.2 Metody iteracyjne}\label{metody-iteracyjne}
 
-\paragraph{3.1.3 Metoda geometryczna}\label{metoda-geometryczna}
+Rozwinięciem metody projekcji prostej jest iteracyjne udoskonalanie dopasowania maski semantycznej do chmury punktów. Polega to na liczeniu wektorów normalnych dla każdego punktu obiektu i dopasowaniu granic poprzez przesuwanie punktów wzdłuż wektorów. Pozwala to na osiągnięcie większej dokładności w stosunku do projekcji prostej przy jednoczesnej większej złożoności obliczeniowej i większej wrażliwości na wskazane przez użytkownika parametry algorytmu. Przykładowe metody to Active Contours, Level Sets, Deformable Models czy Markow Random Fields.
 
-\subsubsection{3.1.4 Metoda wykorzystująca seii neuronowe}\label{metoda-wykorzystujux105ca-seii-neuronowe}
+\paragraph{3.1.3 Metody geometryczne}\label{metody-geometryczne}
 
-\paragraph{3.1.5 Metoda fuzji wielosensorowej}\label{metoda-fuzji-wielosensorowej}
+Odmienne podejście jest stosowane w metodach geometrycznych. W nich podstawą działania algorytmu są uproszczone modele geometryczne zwane prymitywami. Na początku algorytm stosuje się segmentację regionów na podstawie maski segmentacji w celu sprawdzenia spójności regionów odpowiadającym poszczególnym obiektom. Następnie dla każdego regionu określa się prymityw np. prostopadłościan, który następnie jest zoptymalizowany pod kątem odpowiadania danym głębi i maski.
+Ta metoda jest bardziej efektywna niż algorytmy iteracyjne dla prostych obiektów, o nieskomplikowanym kształcie. Zależy ona jednak od jakości maski semantycznej i chmury punktów.
+
+\paragraph{3.1.4 Metoda wyrównywania wbudowana w bibliotekę realsense}\label{metoda-wyruxf3wnywania-wbudowana-w-bibliotekux119-realsense}
 
 \subsubsection{3.2 Sposób wizualizacji danych}\label{sposuxf3b-wizualizacji-danych}
 
-\subsection{4. Program tworający i operujący na trójwymiarowej mapie semantycznej}\label{program-tworajux105cy-i-operujux105cy-na-truxf3jwymiarowej-mapie-semantycznej}
+Jednym z najczęściej spotykanych sposobów wizualizacji danych zawierających informacje o głębi scenerii jest stosowanie chmury punktów. Polega ona na umiejscowieniu punktów np. w trójwymiarowym układzie odniesienia w celu przekazania informacji o głębi. W celu dodania innych informacji często dane punkty są kolorowane na różne barwy. Dzięki temu można łatwo zwizualizować zdjęcia wraz z zarejestrowaną głębią. Kolory mogą również być przypisane do danej etytkiety przez co otrzymuje się zsegmentowaną chmurę pubnktów.
+
+\subsection{4. Program tworzący i operujący na trójwymiarowej mapie semantycznej}\label{program-tworzux105cy-i-operujux105cy-na-truxf3jwymiarowej-mapie-semantycznej}
 
 \subsubsection{4.1 Opis programu}\label{opis-programu}
 
-Po uzyskaniu obrazu z kamery należy podać go operacji wytrenowanym modelem w celu segmentacji semantycznej. W efekcie otrzymano informacje na temat przynależności danego pixela obrazu do klasy np. człowieka, samochodu itp. Na tej podstawie tworzona jest maska segmentacji. Kolejnym etapem jest dodanie informacji o głebi z czujników na segmentowany obraz.
+Po uzyskaniu obrazu z kamery należy podać go operacji wytrenowanym modelem w celu segmentacji semantycznej. W efekcie otrzymano informacje na temat przynależności danego piksela obrazu do klasy np. człowieka, samochodu itp. Na tej podstawie tworzona jest maska segmentacji. Kolejnym etapem jest dodanie informacji o głębi z czujników na segmentowany obraz.
 
 Program został napisany w języku Python. Wykorzystano następujące biblioteki:
 
@@ -145,16 +168,18 @@ Program został napisany w języku Python. Wykorzystano następujące biblioteki
 \item
   OpenCV - otwartoźródłowa biblioteka do operacji na obrazach
 \item
-  PyTorch - biblioteka udostaępniajaca pretrenowane modele AI z frameworka transformers
+  PyTorch - biblioteka udostępniająca pretrenowane modele AI z frameworka transformers
 \item
   TorchVision - biblioteka rodziny PyTorch udostępniająca gotowe datasety, wytrenowane modele wyspecjalizowane w używaniu przy wizji komputerowej.
 \item
   Ultralitics - biblioteka udostępniająca gotowe modele YOLO wyspecjalizowane w używaniu przy wizji komputerowej.
 \item
-  Matplotib - biblioteka szeroko stosowana do rysowania wykresości i wizualizacji danych.
+  Matplotib - biblioteka szeroko stosowana do rysowania wykresów i wizualizacji danych.
+\item
+  Open3d - biblioteka służąca do operowania na chmury punktów.
 \end{itemize}
 
-Po uruchomieniu program inicjuje wybrany wytrenowany model oraz przygotowuje niezbędą konfiguracę do obslugi kamery Realsense. Po sprawdzeniu obecności sprzętu uruchamiana jest pętla, której zadaniem jest zniwelowanie degradacji kolorów, która wystpuje od razu po włączeniu kamery i zanika z czasem. Po odczekaniu nieznaczenj chwili pobierane jest zdjęcie i informacje o głebi, które poslużą do stworzenia mapy.
+Po uruchomieniu program inicjuje wybrany wytrenowany model oraz przygotowuje niezbędną konfigurację do obsługi kamery Realsense. Po sprawdzeniu obecności sprzętu uruchamiana jest pętla, której zadaniem jest zniwelowanie degradacji kolorów, która wystpuje od razu po włączeniu kamery i zanika z czasem. Po odczekaniu nieznacznej chwili pobierane jest zdjęcie i informacje o głębi, które posłużą do stworzenia mapy.
 
 Operacje na obrazie:
 
@@ -164,15 +189,15 @@ Operacje na obrazie:
 \item
   Transformacja obrazu na tablicę bibliotekii Numpy
 \item
-  Generowanie kolorów, którymi będą kolorowane dane pixele w celu oznaczenia przynależności do klasy
+  Generowanie kolorów, którymi będą kolorowane dane piksela w celu oznaczenia przynależności do klasy
 \item
   Segmentacja obrazu z naniesieniem kolorów
 \item
-  Wyswietlenie obrazu pobranego oraz po segmentacji
+  Wyświetlanie obrazu pobranego oraz po segmentacji
 \item
   Naniesienie chmury punktów 3d z czujników odległości
 \item
-  Zapis otrzymanych punktów do pliku 3d\_map.ply
+  Zapis otrzymanych punktów do pliku o rozszerzeniu .ply
 \end{enumerate}
 
 \subsubsection{4.2 Użyte modele}\label{uux17cyte-modele}
@@ -193,7 +218,7 @@ Operacje na obrazie:
 
 \subsubsection{4.3 Wizualizajc adanych}\label{wizualizajc-adanych}
 
-\subsection{Prypisy}\label{prypisy}
+\subsection{Przypisy}\label{przypisy}
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
@@ -219,6 +244,8 @@ Operacje na obrazie:
   \href{https://github.com/facebookresearch/detectron2}{Datacron2} \href{https://github.com/facebookresearch/detectron2/blob/main/MODEL_ZOO.md}{papier}
 \item
   \href{https://github.com/open-mmlab/mmdetection}{mmdetection}
+\item
+  \href{https://arxiv.org/pdf/2311.14405v1}{OneFormer3d}, \href{https://paperswithcode.com/paper/oneformer3d-one-transformer-for-unified-point}{wpis w paperwithcode.com}
 \end{enumerate}
 
 \subsection{Notatki z przeglądu literatury}\label{notatki-z-przeglux105du-literatury}
@@ -264,5 +291,26 @@ Resultat: udao się osiągnąć lepsze resultaty niż w innych frameworkach przy
 \subsubsection{PanoOcc: Unified Occupancy Representation for Camera-based 3D Panoptic Segmentation}\label{panoocc-unified-occupancy-representation-for-camera-based-3d-panoptic-segmentation}
 
 PanoOcc - metoda oparta na agregacji informacji z wokseli w celu zrozumienia
+
+\subsubsection{Point Transformer V3: Simpler, Faster, Stronger}\label{point-transformer-v3-simpler-faster-stronger}
+
+Zasada działania:
+1. Chmura punktów jest normalizowana przed podaniem ich do operatora. Ujednolica to dane do treningu modelu. Stosowana jest normalizacja warstw zamiast normalizacja batchy.
+2. Nadal używany jest grid pooling wzięty z poprzedniego modelu PTv2.
+3. Dodatkowa warstwa konwolucyjna pozwalająca na zamianę kodowania pozycji (Relative Position Encoding) na xCPE (enhnced Conditional Position Embedding), co daje lepsze wyniki przy minimalnie większym nakładzie obliczeniowym
+
+Model jest rozwinięciem idei stojącej za PTv2. Jest szybszy a zarazem zachowuje elastyczność i prostotę.
+
+\subsubsection{OneFormer3D: One Transformer for Unified Point Cloud Segmentation}\label{oneformer3d-one-transformer-for-unified-point-cloud-segmentation}
+
+Użycie backbone z U-Neta i połączenie z dekoderem transformer w celu zwiększenia wydajności (czasu i pamięci) - pierwsze takie połączenie.
+Framework jest dziedziczony z SPFormer z uwagi na prostotę pipelineu, mały nakład pamięci, szybko interface (fast interface).
+Zasada działania:
+1. Najpierw 3d U-Net wyodrębnia cechy z punktów. Analizowany jest kolor RGB punktu oraz jego położenie w przestrzeni.
+2. Uśrednienie cech punktów przez ``flexible pooling'' i łączenie punktów w ``superpunkty''.
+3. Cechy superpunktów są podawane do dekodera transformera - dokładniej to 6 warstw dekodera. Oprócz nich można również podać zapytania semantyczne i instancyjne w celu trenowania modelu.
+4. Decoder zwraca zestaw kerneli. Każdy z nich reprezentuje segmentowaną maskę obiektu/przedmiotu. Może to być maska po segmentacji ponoptycznej, semantycznej lub instancyjnej.
+
+Na moment pisania tego fragmentu pracy OneFormer3D jest notowany jako najlepszy model, który został sprawdzony na datasecie S3DIS pod kątem segmentacji semantycznej 3D oraz jako najlepszy model pod kontem segmentacji panoptycznej na datasecie ScanNet.
 
 \end{document}
