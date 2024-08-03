@@ -10,10 +10,11 @@ Używając dostępnych bibliotek udostępnionych przez producenta odczytano dane
 ### 1.2  Definicja segmentacji semantycznej
 
 Segmentacja semantyczna jest pod zadaniem segmentacji panoptycznej, którą definiuje się jako przypisanie każdemu pixelowi analizowanego obrazu etykiety semantycznej oraz identyfikacji każdej z instancji występującej na obrazie. Etykiety są zazwyczaj dzielone na te opisujące na obiektach policzalnych - ang. things - np. osoby, samochody, drzewa, oraz obiektach niepoliczalnych i amorficznych - ang. stuff - takie jak niebo, droga. [przypis 2. rozdział 1]. Operacje segmentacji wykonywane tych drugich są określane mianem segmentacji semantycznej [przypis 1. rozdział 1.].
+W kontekście 3D, danymi poddawanymi analizie nie jest już samo zdjecie, ale również informacja o głebi odczytywana między innymi z chmury punktów.
 
 ### 1.3 Opis kamery i biblioteki
 
-Kamera wykorzystana w niniejszej pracy to Intel® RealSense™ Depth Camera D435. Wyposażona jest ona w klasyczny obiektyw RGB jak i oprzyrządowanie do odczytania informacji o głębi obrazu. Wykorzystuje do tego rzutnik punktów widocznych w podczerwieni, których pozycja jest określana przez stereoskopowe czujniki podczerwieni. Producent określa odległość roboczą przyrządu od 30 cm do 3 m. [przypis 3. specyfikacja techniczna].
+Kamera wykorzystana w niniejszej pracy to Intel® RealSense™ Depth Camera D435. Wyposażona jest ona w klasyczny obiektyw RGB jak i oprzyrządowanie do odczytania informacji o głębi obrazu. Wykorzystuje do tego rzutnik punktów widocznych w podczerwieni, których pozycja jest określana przez stereoskopowe czujniki podczerwieni. Producent określa odległość roboczą przyrządu od 30 cm do 3 m. [przypis 3. specyfikacja techniczna]. W przeciwieństwie do kamer wyposarzonych w dwa obiektywy RGB, kamera RGBD lepiej sprawuje się w zamkniętych pomieszczeniach i na mniejszych dystansach.
 Producent dostarcza również bibliotekę librealsense, która pozwala na zmianę domyślnych parametrów kamery. W niniejszej pracy została wykorzystana jej odmiana napisana w języku Python - pyrealsense. Jest wyposażona w gotowe funkcje do odczytu obrazu RGB i głębi w danych rozdzielczościach, funkcję wyrównywania obu obrazów, czy prostego zapisywania chmury punktów 3d do pliku o rozszerzeniu .ply.
 
 ## 2. Przegląd używanych systemów
@@ -29,17 +30,11 @@ W tym rozdziale zostaną opisane jedne z najpopularniejszych używanych systemy 
 #### 2.1.1 Transformers
 
 Transformers oddaje w ręce użytkownika API, które pozwalają na używanie już wytrenowanych modelu. Framework jest szeroko stosowany w dziedzinach związanych z NLP, audio czy chociażby z wizją komputerową.
-
 Transformers został zaprojektowany by jak najlepiej odwzorować modele potokowe tzn. dokonać wstępnej obróbki danych, poddać je działaniu modelu i dokonać predykcji. Każdy z modeli został zdefiniowany poprzez trzy bloki stanowiące rdzeń działania całego frameworka: blok tokenizacji danych, blok transformacji (od którego wzięła się nazwa frameworka), oraz z bloku głowy/głów.
-
 Blok tokenizacji - również nazywany tokenizerem - jest odpowiedzialny za nadawanie stokenizowanych klas, które są niezbędne do pracy każdego modelu. Klasy mogą być już predefiniowane, ale mogą również zostać dodane przez użytkownika. Przechowuje on listę mapującą token do indeksu.
-
 Blok transformacji ma za zadanie wykonywać zadanie modelu np. generowanie, rozumowanie na podstawie klas powstałych w wyniku tokenizacji w poprzednim bloku. Architektury modeli zostały w taki sposób dobrane, by była możliwość łatwego podmieniania ich bloku transformacji.
-
 Blok głów jest odpowiedzialny za dostosowanie danych otrzymanych z bloku transformacji do danych wyjściowych dostosowanych do danego zadania np. współrzędne bounding boxa. Dodaje on do klasy bazowej warstwę wyjścia oraz funkcję straty. Niektóre bloki obsługują również dodatkowe funkcje takie jak próbkowanie w celu wykonania powierzonego im zadania.
-
 Celem autorów Transformers było stworzenie hubu wytrenowanych modeli w celu ułatwienia dostępu do nich oraz łatwego aplikowania ich do projektów użytkowników. W 2020 roku hub oferował ponad 2000 modeli, w tym BERT i GPT-2. Na czas pisania tej pracy modeli jest ponad 660000.
-
 Modele dostępne w Transformers można zainstalować poprzez instalację biblioteki PyTorch, Tensorflow oraz Flex jak i poprzez bezpośrednie pobranie ze strony projektu na Githubie.
 
 #### 2.1.2 YOLO
@@ -54,7 +49,8 @@ Oprócz klasycznych modeli zajmujących się segmentacją obrazów trzeba równi
 
 #### 2.2.1 Point Transformer V3
 
-
+Najczęściej wskazywanym modelem na stonie gromadzącej modele State of the Art związanych z segemntacją semantyczna 3d [Przypis 7] jest Point Transformer V3. Jest on rozwinięciem swojego poprzednika - PTv2. Autorzy chwalą się, że jest szybszy, a zarazem elastyczny i zachowuje prostotę.
+Dane z chmury punktów przed podaniem ich do modelu są normalizowane. Stosowana jest normalizacja warstw zamiast normalizaji batchy danych. Następnie dane są poddawane gridpoolinowi, co jest cechą zachowaną z poprzedniej iteracji modelu. Dodano warstwę konwolucyjną, która pozwala na zamianę kodowania pozycyjnego punktów na kodowanie xCPE (enhanced Conditional Position Embedding), co dało lepszą dokładność danych wynikowych przy minimalnie większym nakładzie obliczeniowym.
 
 #### 2.2.2 OneFormer3D
 
@@ -135,7 +131,7 @@ Operacje na obrazie:
 
  2. Hu, J., Huang, L., Ren, T., Zhang, S., Ji, R., & Cao, L. (2023). You Only Segment Once: Towards Real-Time Panoptic Segmentation. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (pp. 17819-17829)
 
- 3. [Strona prezentujaca kemerę](https://www.intelrealsense.com/depth-camera-d435/)
+ 3. [Strona prezentująca kemerę](https://www.intelrealsense.com/depth-camera-d435/)
 
  4. [Github z 3d semantic map](https://github.com/shichaoy/semantic_3d_mapping?tab=readme-ov-file) - powiązana prac: Shichao Yang, Yulan Huang and Sebastian Scherer (2017) Semantic 3D Occupancy Mapping through Efficient High Order CRFs
 
