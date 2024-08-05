@@ -9,21 +9,27 @@ Używając dostępnych bibliotek udostępnionych przez producenta odczytano dane
 
 ### 1.2  Definicja segmentacji semantycznej
 
-Segmentacja semantyczna jest pod zadaniem segmentacji panoptycznej, którą definiuje się jako przypisanie każdemu pixelowi analizowanego obrazu etykiety semantycznej oraz identyfikacji każdej z instancji występującej na obrazie. Etykiety są zazwyczaj dzielone na te opisujące na obiektach policzalnych - ang. things - np. osoby, samochody, drzewa, oraz obiektach niepoliczalnych i amorficznych - ang. stuff - takie jak niebo, droga. [przypis 2. rozdział 1]. Operacje segmentacji wykonywane tych drugich są określane mianem segmentacji semantycznej [przypis 1. rozdział 1.].
+Segmentacja semantyczna jest podzadaniem segmentacji panoptycznej, którą definiuje się jako przypisanie każdemu pixelowi analizowanego obrazu etykiety semantycznej oraz identyfikacji każdej z instancji występującej na obrazie. Etykiety są zazwyczaj dzielone na te opisujące na obiektach policzalnych - ang. things - np. osoby, samochody, drzewa, oraz obiektach niepoliczalnych i amorficznych - ang. stuff - takie jak niebo, droga. [przypis 2. rozdział 1]. Operacje segmentacji wykonywane tych drugich są określane mianem segmentacji semantycznej [przypis 1. rozdział 1.].
 W kontekście 3D, danymi poddawanymi analizie nie jest już samo zdjecie, ale również informacja o głebi odczytywana między innymi z chmury punktów.
 
-### 1.3 Opis kamery i biblioteki
+### 1.3 Trójwymiarowa mapa semantyczna
+
+Mapa semantyczna jest graficzną reprezentacją informacji w danej dziedzinie lub tematyce wraz ze wzajemnymi relacjami pomiędzy poszczególnymi pojęciami. W kontekście trójwymiarowości oraz wizji komputerowej jest sposobem na reprezentowanie środowiska łączace informacje o przestrzeni, w tym geometrii obiektów, wraz z semantycznymi etykietami. Pozwala to na przekazanie przez komputer informacji o położeniu obiektów oraz ich znaczeniu/przynależności/reprezentacji.
+W praktyce, mapa jest tworzona poprzez połączenie informacji pozyskanych z chmury punktów tj. kolorów oraz głębi wraz z danymi otrzymanych w wyniku segmentacji semantycznej - etykiet przypisanych do każdego punktu chmury.
+Trójwymiarowe mapy semantyczne znajdują coraz większe zastosowanie w robotyce, szczególnie w rozwiązaniach przemysłowych z dynamicznie zmienającym się otoczeniem robota. Stosowane są również w rzeczywistości rozszerzonej i wirtualnych w celu tworzenia symulacji i środowisk wirtualnych np. na potrzeby medyczne. Są również kluczowe w autonomicznie poruszających się pojazdach jak i w przemyśle np. w celu kontroli efektów pracy zautomatyzowanej linii produkcujnej.
+
+### 1.4 Opis kamery i biblioteki
 
 Kamera wykorzystana w niniejszej pracy to Intel® RealSense™ Depth Camera D435. Wyposażona jest ona w klasyczny obiektyw RGB jak i oprzyrządowanie do odczytania informacji o głębi obrazu. Wykorzystuje do tego rzutnik punktów widocznych w podczerwieni, których pozycja jest określana przez stereoskopowe czujniki podczerwieni. Producent określa odległość roboczą przyrządu od 30 cm do 3 m. [przypis 3. specyfikacja techniczna]. W przeciwieństwie do kamer wyposarzonych w dwa obiektywy RGB, kamera RGBD lepiej sprawuje się w zamkniętych pomieszczeniach i na mniejszych dystansach.
 Producent dostarcza również bibliotekę librealsense, która pozwala na zmianę domyślnych parametrów kamery. W niniejszej pracy została wykorzystana jej odmiana napisana w języku Python - pyrealsense. Jest wyposażona w gotowe funkcje do odczytu obrazu RGB i głębi w danych rozdzielczościach, funkcję wyrównywania obu obrazów, czy prostego zapisywania chmury punktów 3d do pliku o rozszerzeniu .ply.
 
-## 2. Przegląd używanych systemów
+## 2. Przegląd literatury
 
 Z roku na rok powstają coraz nowsze sposoby i podejścia do segmentacji zdjęć i filmów. Poddawane są one testom wydajnościowym na otwartoźródłowych, powszechnie uznanych wśród społeczności zbiorach danych. Trudno nadążyć za najnowyszymi i najwydajniejszymi systemami z uwagi na szybkość zmian jakie zachodzą w tej dziedzinie.
 W tym rozdziale zostaną opisane jedne z najpopularniejszych używanych systemy segmentacji, które są aktywnie używane w tym celu.
 
-
 (prawdopodobnie do wywalenia) Do najpopularniejszych frameworków segmentacji panoptycznej można zaliczyć transformers [przypis 8]. Wybrano go z uwagi na dostępność, wsparcie społeczności i popularność na repozytorium Github oraz ciągły rozwój w celu osiągnięcia coraz lepszych wyników wydajności.
+
 
 ### 2.1 Modele segmentacji semnatycznej
 
@@ -57,7 +63,6 @@ Dane z chmury punktów przed podaniem ich do modelu są normalizowane. Stosowana
 OneFormer3D jest określany przez twórców jako model do ujednoliconej segmentacji chmury punktów. Chwalą się, że jako pierwszy model łączy backbone z U-Net z dekoderem tranformer, co daje wzrot wydajności pod kątem czasu operacji i bardziej zoptymalizowanego użycia pamięci.
 Zasada działania modelu wygląda w następujący sposób:
 Na podstawie koloru oraz położenia danego punktu w przestrzeni ekstraktowane są cechy chmury przez 3D U-Net. Następnie chechy punktów są uśredniane za pomocą "flexible poolingu", a same punkty są łączone w nazywane przez autorów superpunkty. Cechy tych punktów są przekazywane do dekodera o 6 warstwach. W celu trenowania sieci można również podać dodatkowe zapytania semantyczne i instancyjne. Dekoder zwraca zestaw kernel segmentowanych masek obiektów ze zdjęcia. Mogą to być maski będące wynikiem segmentacji instancyjnej, semantycznej czy panoptycznej.
-
 
 ## 3. Metody tworzenia trójwymiarowej mapy semantycznej i jej wizualizacji
 
