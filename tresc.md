@@ -16,7 +16,16 @@ W kontekście 3D, danymi poddawanymi analizie nie jest już samo zdjecie, ale r�
 
 Mapa semantyczna jest graficzną reprezentacją informacji w danej dziedzinie lub tematyce wraz ze wzajemnymi relacjami pomiędzy poszczególnymi pojęciami. W kontekście trójwymiarowości oraz wizji komputerowej jest sposobem na reprezentowanie środowiska łączace informacje o przestrzeni, w tym geometrii obiektów, wraz z semantycznymi etykietami. Pozwala to na przekazanie przez komputer informacji o położeniu obiektów oraz ich znaczeniu/przynależności/reprezentacji.
 W praktyce, mapa jest tworzona poprzez połączenie informacji pozyskanych z chmury punktów tj. kolorów oraz głębi wraz z danymi otrzymanych w wyniku segmentacji semantycznej - etykiet przypisanych do każdego punktu chmury.
-Trójwymiarowe mapy semantyczne znajdują coraz większe zastosowanie w robotyce, szczególnie w rozwiązaniach przemysłowych z dynamicznie zmienającym się otoczeniem robota. Stosowane są również w rzeczywistości rozszerzonej i wirtualnych w celu tworzenia symulacji i środowisk wirtualnych np. na potrzeby medyczne. Są również kluczowe w autonomicznie poruszających się pojazdach jak i w przemyśle np. w celu kontroli efektów pracy zautomatyzowanej linii produkcujnej.
+
+#### 1.3.1 Zastosowanie trójwymiarowych map semantycznych.
+
+(rozwinięty akapit)
+Trójwymiarowe mapy semnatyczne są coraz częściej stosowane w wielu dziedzinach technologii. Prawdopodobnie najczęściej stosuje się je w systemach autopilota w samochodach autonomicznych. Samochody tego rodzaju np. pojazdy firmy Tesla, analizują w czasie rzeczywistym ich otoczenie w celu dostosowania się do aktualnie panującej sytuacji na drodze by jak najskutecznie wykonac powieżone zadanie jakim jest dojechanie do zadanego punktu przez użytkownika, przestrzeganie prawa ruchu drogowego i uniknięcie wyżądzenia jakichkolwiek szkód. W związku z tym, stosują trójwymiare mapy semantyczne by wiedzieć jak daleko dany obiekt znajduje się od auto oraz czy tym danym obiektem np. jest pojazd, znak, przeszkoda czy pieszy. Stosuje się do tego tak kamery RGB, czujniki odległości, LIDaR i inne przyrządu pozwaljące na określenie odległości obiektu od pojazdu. W tym przypadku informacja o odległości jest pozyskiwana wieloma metodami co zwieksza dokładność pomiarową tej wartości.
+Typowym zastosowaniem trójwymiarowej mapy semantycznej jest SLAM - ang. Simultaneous localization and mapping. Polega on na tworzeniu i aktualizowaniu mapy otoczenia robota wraz ze śledzeniem wskazanego agenta.
+W podobnym celu, co w pojazdach autonomicznych stosuje się mapy semantyczne w robotach mobilnych. Częstym scenariuszem ich zastosowania jest rozpoznawanie przeszkód robota w dynamicznie zmieniającym się środosisku np. w robotach kurierach w dużych kompleksach magazynowych, gdzie również pracują ludzie. Robot musi dostosowywać swoją trajektorię w celu omijania przeszkód jak i wchodzić w interakcje z człowiekiem. W tym celu musi rozpoznawać co się znajduje w jego sąsiedztwie by dostosować swoje zachowanie.
+W zautomatyzowanych fabrykach mapy semantyczne mogę być stosowane w celu sprawdzenia jakości wytworzonych dóbr jak jak i wspomagać maszyny w poruszaniu się np. ramienia robota spawalniczego w celu odnalezienia porządanego miejsca spawania.
+Coraz szersze zastosowanie znajdują one w medycynie. Stosowane są w procesach diagnostycznych, by pozyskane dane mogły zostać wykorzystane w np. radiologii, radioterapii, derpatologii czy okulistyce, co może ułatwić pracę lekarzy jak i dać lepsze efekty dobranej na tej podstawie terapii czy zabiegu.
+[Przypis o wykorzystaniu w medycynie - abstract](https://www.sciencedirect.com/science/article/abs/pii/S1566253522001695)
 
 ### 1.4 Opis kamery i biblioteki
 
@@ -30,8 +39,7 @@ W tym rozdziale zostaną opisane jedne z najpopularniejszych używanych systemy 
 
 (prawdopodobnie do wywalenia) Do najpopularniejszych frameworków segmentacji panoptycznej można zaliczyć transformers [przypis 8]. Wybrano go z uwagi na dostępność, wsparcie społeczności i popularność na repozytorium Github oraz ciągły rozwój w celu osiągnięcia coraz lepszych wyników wydajności.
 
-
-### 2.1 Modele segmentacji semnatycznej
+### 2.1 Modele segmentacji sematycznej
 
 #### 2.1.1 Transformers
 
@@ -51,7 +59,7 @@ brak papierów o yolov8.
 
 ### 2.2 Modele segmentacji semantycznej 3D
 
-Oprócz klasycznych modeli zajmujących się segmentacją obrazów trzeba również wyróżnić modele specjalizujące się segmentacją chmur punktów, zawierających oprócz informacji o kolorach również dane o głębi zarejestrowanego obrazu. Są one o wiele mniej popularne z uwagi na znacznie rzadsze koszystanie z obrazów RGBD - więcej osób posiada obiektywy do wykonywania zdjęć 2D, w szczególności smartfony, niż sprzęt pozwalający na pozyskanie danych o głębi zdjęcia. Postanowiono na opisanie zasady działania modeli, które odznaczyły się w testach wydajnościowych w momencie pisania tej pracy na zbiorach SemanticKITTI, ScanNet200, ScanNet++ - PTv3 + PTT, oraz S3DIS - OneFormer3D.
+Oprócz klasycznych modeli zajmujących się segmentacją obrazów trzeba również wyróżnić modele specjalizujące się segmentacją chmur punktów, zawierających oprócz informacji o kolorach również dane o głębi zarejestrowanego obrazu. Są one o wiele mniej popularne z uwagi na znacznie rzadsze koszystanie z obrazów RGBD - więcej osób posiada obiektywy do wykonywania zdjęć 2D, w szczególności smartfony, niż sprzęt pozwalający na pozyskanie danych o głębi zdjęcia. Postanowiono na opisanie zasady działania modeli, które odznaczyły się w testach wydajnościowych w momencie pisania tej pracy na zbiorach SemanticKITTI, ScanNet200, ScanNet++ - PTv3 + PTT, oraz na S3DIS - OneFormer3D.
 
 #### 2.2.1 Point Transformer V3
 
@@ -85,8 +93,6 @@ Odmienne podejście jest stosowane w metodach geometrycznych. W nich podstawą d
 Ta metoda jest bardziej efektywna niż algorytmy iteracyjne dla prostych obiektów, o nieskomplikowanym kształcie. Zależy ona jednak od jakości maski semantycznej i chmury punktów.
 
 #### 3.1.4 Metoda wyrównywania wbudowana w bibliotekę realsense
-
-
 
 ### 3.2 Sposób wizualizacji danych
 
