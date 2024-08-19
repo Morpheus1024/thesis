@@ -7,7 +7,7 @@
 W niniejszej pracy przedstawiono proces tworzenia i operowania na trójwymiarowej mapie semantycznej na podstawie danych pochodzących z kamery RGPB-D Intel RealSense D435.
 Używając dostępnych bibliotek udostępnionych przez producenta odczytano dane z kamery, które posłużyły jako podstawa do tworzenia mapy semantycznej. Następnie, przez odpowiednią obróbkę danych jak i wykorzystanie dostępnych modeli dokonano segmentacji obiektów widzianych przez kamerę. Na tej podstawie stworzono trójwymiarową mapę semantyczną widzianego obrazu.
 
-### 1.2  Definicja segmentacji semantycznej
+### 1.2  Segmentacja semantyczna
 
 Segmentacja semantyczna jest podzadaniem segmentacji panoptycznej, którą definiuje się jako przypisanie każdemu pixelowi analizowanego obrazu etykiety semantycznej oraz identyfikacji każdej z instancji występującej na obrazie. Etykiety są zazwyczaj dzielone na te opisujące na obiektach policzalnych - ang. things - np. osoby, samochody, drzewa, oraz obiektach niepoliczalnych i amorficznych - ang. stuff - takie jak niebo, droga. [przypis 2. rozdział 1]. Operacje segmentacji wykonywane tych drugich są określane mianem segmentacji semantycznej [przypis 1. rozdział 1.].
 W kontekście 3D, danymi poddawanymi analizie nie jest już samo zdjecie, ale również informacja o głebi odczytywana między innymi z chmury punktów.
@@ -25,11 +25,13 @@ Typowym zastosowaniem trójwymiarowej mapy semantycznej jest SLAM - ang. Simulta
 W podobnym celu, co w pojazdach autonomicznych stosuje się mapy semantyczne w robotach mobilnych. Częstym scenariuszem ich zastosowania jest rozpoznawanie przeszkód robota w dynamicznie zmieniającym się środosisku np. w robotach kurierach w dużych kompleksach magazynowych, gdzie również pracują ludzie. Robot musi dostosowywać swoją trajektorię w celu omijania przeszkód jak i wchodzić w interakcje z człowiekiem. W tym celu musi rozpoznawać co się znajduje w jego sąsiedztwie by dostosować swoje zachowanie.
 W zautomatyzowanych fabrykach mapy semantyczne mogę być stosowane w celu sprawdzenia jakości wytworzonych dóbr jak jak i wspomagać maszyny w poruszaniu się np. ramienia robota spawalniczego w celu odnalezienia porządanego miejsca spawania.
 Coraz szersze zastosowanie znajdują one w medycynie. Stosowane są w procesach diagnostycznych, by pozyskane dane mogły zostać wykorzystane w np. radiologii, radioterapii, derpatologii czy okulistyce, co może ułatwić pracę lekarzy jak i dać lepsze efekty dobranej na tej podstawie terapii czy zabiegu.
+
 [Przypis o wykorzystaniu w medycynie - abstract](https://www.sciencedirect.com/science/article/abs/pii/S1566253522001695)
 
 ### 1.4 Opis kamery i biblioteki
 
-Kamera wykorzystana w niniejszej pracy to Intel® RealSense™ Depth Camera D435. Wyposażona jest ona w klasyczny obiektyw RGB jak i oprzyrządowanie do odczytania informacji o głębi obrazu. Wykorzystuje do tego rzutnik punktów widocznych w podczerwieni, których pozycja jest określana przez stereoskopowe czujniki podczerwieni. Producent określa odległość roboczą przyrządu od 30 cm do 3 m. [przypis 3. specyfikacja techniczna]. W przeciwieństwie do kamer wyposarzonych w dwa obiektywy RGB, kamera RGBD lepiej sprawuje się w zamkniętych pomieszczeniach i na mniejszych dystansach.
+Kamera wykorzystana w niniejszej pracy to Intel® RealSense™ Depth Camera D435f. Wyposażona jest ona w klasyczny obiektyw RGB jak i oprzyrządowanie do odczytania informacji o głębi obrazu. Wykorzystuje do tego rzutnik punktów widocznych w podczerwieni, których pozycja jest określana przez stereoskopowe czujniki podczerwieni. Producent określa odległość roboczą przyrządu od 30 cm do 3 m. [przypis 3. specyfikacja techniczna]. W przeciwieństwie do kamer wyposarzonych w dwa obiektywy RGB, kamera RGBD lepiej sprawuje się w zamkniętych pomieszczeniach i na mniejszych dystansach.
+Model D435f jest wyposażony w stosunku do kamery D435 w dodatkowy filtr światła podczerwonego w celu lebszego radzenia sobie z szumami. Jest skierowana do zastosowań w mobilnych robotach autonomicznych.
 Producent dostarcza również bibliotekę librealsense, która pozwala na zmianę domyślnych parametrów kamery. W niniejszej pracy została wykorzystana jej odmiana napisana w języku Python - pyrealsense. Jest wyposażona w gotowe funkcje do odczytu obrazu RGB i głębi w danych rozdzielczościach, funkcję wyrównywania obu obrazów, czy prostego zapisywania chmury punktów 3d do pliku o rozszerzeniu .ply.
 
 ## 2. Przegląd literatury
@@ -102,6 +104,8 @@ Jednym z najczęściej spotykanych sposobów wizualizacji danych zawierających 
 
 ### 4.1 Opis programu
 
+(Program wciąż w etapie rozwoju)
+
 Po uzyskaniu obrazu z kamery należy podać go operacji wytrenowanym modelem w celu segmentacji semantycznej. W efekcie otrzymano informacje na temat przynależności danego piksela obrazu do klasy np. człowieka, samochodu itp. Na tej podstawie tworzona jest maska segmentacji. Kolejnym etapem jest dodanie informacji o głębi z czujników na segmentowany obraz.
 
 Program został napisany w języku Python. Wykorzystano następujące biblioteki:
@@ -128,6 +132,7 @@ Operacje na obrazie:
 
 ### 4.2 Użyte modele
 
+Segmentacja 2D:
 - resnet50
 - resnet101
 - mobilenet_v3_large
@@ -161,6 +166,7 @@ Operacje na obrazie:
  11. [mmdetection](https://github.com/open-mmlab/mmdetection)
  
  12. [OneFormer3d](https://arxiv.org/pdf/2311.14405v1), [wpis w paperwithcode.com](https://paperswithcode.com/paper/oneformer3d-one-transformer-for-unified-point) 
+
 
 ## Notatki z przeglądu literatury
 
