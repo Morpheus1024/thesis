@@ -4,34 +4,34 @@
 
 ### 1.1 Cel Pracy
 
-W niniejszej pracy przedstawiono proces tworzenia i operowania na trójwymiarowej mapie semantycznej na podstawie danych pochodzących z kamery RGPB-D Intel RealSense D435.
+W niniejszej pracy przedstawiono proces tworzenia i operowania na trójwymiarowej mapie semantycznej na podstawie danych pochodzących z kamery RGB-D Intel RealSense D435.
 Używając dostępnych bibliotek udostępnionych przez producenta odczytano dane z kamery, które posłużyły jako podstawa do tworzenia mapy semantycznej. Następnie, przez odpowiednią obróbkę danych jak i wykorzystanie dostępnych modeli dokonano segmentacji obiektów widzianych przez kamerę. Na tej podstawie stworzono trójwymiarową mapę semantyczną widzianego obrazu.
 
 ### 1.2  Segmentacja semantyczna
 
-Segmentacja semantyczna jest podzadaniem segmentacji panoptycznej, którą definiuje się jako przypisanie każdemu pixelowi analizowanego obrazu etykiety semantycznej oraz identyfikacji każdej z instancji występującej na obrazie. Etykiety są zazwyczaj dzielone na te opisujące na obiektach policzalnych - ang. things - np. osoby, samochody, drzewa, oraz obiektach niepoliczalnych i amorficznych - ang. stuff - takie jak niebo, droga. [przypis 2. rozdział 1]. Operacje segmentacji wykonywane tych drugich są określane mianem segmentacji semantycznej [przypis 1. rozdział 1.].
-W kontekście 3D, danymi poddawanymi analizie nie jest już samo zdjecie, ale również informacja o głebi odczytywana między innymi z chmury punktów.
+Segmentacja semantyczna jest pod zadaniem segmentacji panoptycznej, którą definiuje się jako przypisanie każdemu pikselowi analizowanego obrazu etykiety semantycznej oraz identyfikacji każdej z instancji występującej na obrazie. Etykiety są zazwyczaj dzielone na te opisujące na obiektach policzalnych - ang. things - np. osoby, samochody, drzewa, oraz obiektach niepoliczalnych i amorficznych - ang. stuff - takie jak niebo, droga. [przypis 2. rozdział 1]. Operacje segmentacji wykonywane tych drugich są określane mianem segmentacji semantycznej [przypis 1. rozdział 1.].
+W kontekście 3D, danymi poddawanymi analizie nie jest już samo zdjęcie, ale również informacja o głębi odczytywana między innymi z chmury punktów.
 
 ### 1.3 Trójwymiarowa mapa semantyczna
 
-Mapa semantyczna jest graficzną reprezentacją informacji w danej dziedzinie lub tematyce wraz ze wzajemnymi relacjami pomiędzy poszczególnymi pojęciami. W kontekście trójwymiarowości oraz wizji komputerowej jest sposobem na reprezentowanie środowiska łączace informacje o przestrzeni, w tym geometrii obiektów, wraz z semantycznymi etykietami. Pozwala to na przekazanie przez komputer informacji o położeniu obiektów oraz ich znaczeniu/przynależności/reprezentacji.
+Mapa semantyczna jest graficzną reprezentacją informacji w danej dziedzinie lub tematyce wraz ze wzajemnymi relacjami pomiędzy poszczególnymi pojęciami. W kontekście trójwymiarowości oraz wizji komputerowej jest sposobem na reprezentowanie środowiska łączące informacje o przestrzeni, w tym geometrii obiektów, wraz z semantycznymi etykietami. Pozwala to na przekazanie przez komputer informacji o położeniu obiektów oraz ich znaczeniu/przynależności/reprezentacji.
 W praktyce, mapa jest tworzona poprzez połączenie informacji pozyskanych z chmury punktów tj. kolorów oraz głębi wraz z danymi otrzymanych w wyniku segmentacji semantycznej - etykiet przypisanych do każdego punktu chmury.
 
 #### 1.3.1 Zastosowanie trójwymiarowych map semantycznych.
 
 (rozwinięty akapit)
-Trójwymiarowe mapy semnatyczne są coraz częściej stosowane w wielu dziedzinach technologii. Prawdopodobnie najczęściej stosuje się je w systemach autopilota w samochodach autonomicznych. Samochody tego rodzaju np. pojazdy firmy Tesla, analizują w czasie rzeczywistym ich otoczenie w celu dostosowania się do aktualnie panującej sytuacji na drodze by jak najskutecznie wykonac powieżone zadanie jakim jest dojechanie do zadanego punktu przez użytkownika, przestrzeganie prawa ruchu drogowego i uniknięcie wyżądzenia jakichkolwiek szkód. W związku z tym, stosują trójwymiare mapy semantyczne by wiedzieć jak daleko dany obiekt znajduje się od auto oraz czy tym danym obiektem np. jest pojazd, znak, przeszkoda czy pieszy. Stosuje się do tego tak kamery RGB, czujniki odległości, LIDaR i inne przyrządu pozwaljące na określenie odległości obiektu od pojazdu. W tym przypadku informacja o odległości jest pozyskiwana wieloma metodami co zwieksza dokładność pomiarową tej wartości.
+Trójwymiarowe mapy semantyczne są coraz częściej stosowane w wielu dziedzinach technologii. Prawdopodobnie najczęściej stosuje się je w systemach autopilota w samochodach autonomicznych. Samochody tego rodzaju np. pojazdy firmy Tesla, analizują w czasie rzeczywistym ich otoczenie w celu dostosowania się do aktualnie panującej sytuacji na drodze by jak najskuteczniej wykonać powierzone zadanie jakim jest dojechanie do zadanego punktu przez użytkownika, przestrzeganie prawa ruchu drogowego i uniknięcie wyrządzenia jakichkolwiek szkód. W związku z tym, stosują trójwymiarowe mapy semantyczne by wiedzieć jak daleko dany obiekt znajduje się od auto oraz czy tym danym obiektem np. jest pojazd, znak, przeszkoda czy pieszy. Stosuje się do tego tak kamery RGB, czujniki odległości, LIDaR i inne przyrządu pozwalające na określenie odległości obiektu od pojazdu. W tym przypadku informacja o odległości jest pozyskiwana wieloma metodami co zwiększa dokładność pomiarową tej wartości.
 Typowym zastosowaniem trójwymiarowej mapy semantycznej jest SLAM - ang. Simultaneous localization and mapping. Polega on na tworzeniu i aktualizowaniu mapy otoczenia robota wraz ze śledzeniem wskazanego agenta.
-W podobnym celu, co w pojazdach autonomicznych stosuje się mapy semantyczne w robotach mobilnych. Częstym scenariuszem ich zastosowania jest rozpoznawanie przeszkód robota w dynamicznie zmieniającym się środosisku np. w robotach kurierach w dużych kompleksach magazynowych, gdzie również pracują ludzie. Robot musi dostosowywać swoją trajektorię w celu omijania przeszkód jak i wchodzić w interakcje z człowiekiem. W tym celu musi rozpoznawać co się znajduje w jego sąsiedztwie by dostosować swoje zachowanie.
-W zautomatyzowanych fabrykach mapy semantyczne mogę być stosowane w celu sprawdzenia jakości wytworzonych dóbr jak jak i wspomagać maszyny w poruszaniu się np. ramienia robota spawalniczego w celu odnalezienia porządanego miejsca spawania.
-Coraz szersze zastosowanie znajdują one w medycynie. Stosowane są w procesach diagnostycznych, by pozyskane dane mogły zostać wykorzystane w np. radiologii, radioterapii, derpatologii czy okulistyce, co może ułatwić pracę lekarzy jak i dać lepsze efekty dobranej na tej podstawie terapii czy zabiegu.
+W podobnym celu, co w pojazdach autonomicznych stosuje się mapy semantyczne w robotach mobilnych. Częstym scenariuszem ich zastosowania jest rozpoznawanie przeszkód robota w dynamicznie zmieniającym się środowisku np. w robotach kurierach w dużych kompleksach magazynowych, gdzie również pracują ludzie. Robot musi dostosowywać swoją trajektorię w celu omijania przeszkód jak i wchodzić w interakcje z człowiekiem. W tym celu musi rozpoznawać co się znajduje w jego sąsiedztwie by dostosować swoje zachowanie.
+W zautomatyzowanych fabrykach mapy semantyczne mogę być stosowane w celu sprawdzenia jakości wytwarzonych dóbr jak jak i wspomagać maszyny w poruszaniu się np. ramienia robota spawalniczego w celu odnalezienia pożądanego miejsca spawania.
+Coraz szersze zastosowanie znajdują one w medycynie. Stosowane są w procesach diagnostycznych, by pozyskane dane mogły zostać wykorzystane w np. radiologii, radioterapii, dermatologii czy okulistyce, co może ułatwić pracę lekarzy jak i dać lepsze efekty dobranej na tej podstawie terapii czy zabiegu.
 
 [Przypis o wykorzystaniu w medycynie - abstract](https://www.sciencedirect.com/science/article/abs/pii/S1566253522001695)
 
 ### 1.4 Opis kamery i biblioteki
 
-Kamera wykorzystana w niniejszej pracy to Intel® RealSense™ Depth Camera D435f. Wyposażona jest ona w klasyczny obiektyw RGB jak i oprzyrządowanie do odczytania informacji o głębi obrazu. Wykorzystuje do tego rzutnik punktów widocznych w podczerwieni, których pozycja jest określana przez stereoskopowe czujniki podczerwieni. Producent określa odległość roboczą przyrządu od 30 cm do 3 m. [przypis 3. specyfikacja techniczna]. W przeciwieństwie do kamer wyposarzonych w dwa obiektywy RGB, kamera RGBD lepiej sprawuje się w zamkniętych pomieszczeniach i na mniejszych dystansach.
-Model D435f jest wyposażony w stosunku do kamery D435 w dodatkowy filtr światła podczerwonego w celu lebszego radzenia sobie z szumami. Jest skierowana do zastosowań w mobilnych robotach autonomicznych.
+Kamera wykorzystana w niniejszej pracy to Intel® RealSense™ Depth Camera D435f. Wyposażona jest ona w klasyczny obiektyw RGB jak i oprzyrządowanie do odczytania informacji o głębi obrazu. Wykorzystuje do tego rzutnik punktów widocznych w podczerwieni, których pozycja jest określana przez stereoskopowe czujniki podczerwieni. Producent określa odległość roboczą przyrządu od 30 cm do 3 m. [przypis 3. specyfikacja techniczna]. W przeciwieństwie do kamer wyposażonych w dwa obiektywy RGB, kamera RGBD lepiej sprawuje się w zamkniętych pomieszczeniach i na mniejszych dystansach.
+Model D435f jest wyposażony w stosunku do kamery D435 w dodatkowy filtr światła podczerwonego w celu lepszego radzenia sobie z szumami. Jest skierowana do zastosowań w mobilnych robotach autonomicznych.
 Producent dostarcza również bibliotekę librealsense, która pozwala na zmianę domyślnych parametrów kamery. W niniejszej pracy została wykorzystana jej odmiana napisana w języku Python - pyrealsense. Jest wyposażona w gotowe funkcje do odczytu obrazu RGB i głębi w danych rozdzielczościach, funkcję wyrównywania obu obrazów, czy prostego zapisywania chmury punktów 3d do pliku o rozszerzeniu .ply.
 
 ## 2. Przegląd literatury
@@ -41,14 +41,14 @@ W tym rozdziale zostaną opisane jedne z najpopularniejszych używanych systemy 
 
 (prawdopodobnie do wywalenia) Do najpopularniejszych frameworków segmentacji panoptycznej można zaliczyć transformers [przypis 8]. Wybrano go z uwagi na dostępność, wsparcie społeczności i popularność na repozytorium Github oraz ciągły rozwój w celu osiągnięcia coraz lepszych wyników wydajności.
 
-### 2.1 Modele segmentacji sematycznej
+### 2.1 Modele segmentacji semantycznej
 
 #### 2.1.1 Transformers
 
 Transformers oddaje w ręce użytkownika API, które pozwalają na używanie już wytrenowanych modelu. Framework jest szeroko stosowany w dziedzinach związanych z NLP, audio czy chociażby z wizją komputerową.
 Transformers został zaprojektowany by jak najlepiej odwzorować modele potokowe tzn. dokonać wstępnej obróbki danych, poddać je działaniu modelu i dokonać predykcji. Każdy z modeli został zdefiniowany poprzez trzy bloki stanowiące rdzeń działania całego frameworka: blok tokenizacji danych, blok transformacji (od którego wzięła się nazwa frameworka), oraz z bloku głowy/głów.
 Blok tokenizacji - również nazywany tokenizerem - jest odpowiedzialny za nadawanie stokenizowanych klas, które są niezbędne do pracy każdego modelu. Klasy mogą być już predefiniowane, ale mogą również zostać dodane przez użytkownika. Przechowuje on listę mapującą token do indeksu.
-Blok transformacji ma za zadanie wykonywać zadanie modelu np. generowanie, rozumowanie na podstawie klas powstałych w wyniku tokenizacji w poprzednim bloku. Architektury modeli zostały w taki sposób dobrane, by była możliwość łatwego podmieniania ich bloku transformacji.
+Blok transformacji ma za zadanie wykonywać zadanie modelu np. generowanie, rozumowanie na podstawie klas powstałych w wyniku tokenizacji w poprzednim bloku. Architektury modeli zostały w taki sposób dobrane, by była możliwość łatwego zmieniać ich bloku transformacji.
 Blok głów jest odpowiedzialny za dostosowanie danych otrzymanych z bloku transformacji do danych wyjściowych dostosowanych do danego zadania np. współrzędne bounding boxa. Dodaje on do klasy bazowej warstwę wyjścia oraz funkcję straty. Niektóre bloki obsługują również dodatkowe funkcje takie jak próbkowanie w celu wykonania powierzonego im zadania.
 Celem autorów Transformers było stworzenie hubu wytrenowanych modeli w celu ułatwienia dostępu do nich oraz łatwego aplikowania ich do projektów użytkowników. W 2020 roku hub oferował ponad 2000 modeli, w tym BERT i GPT-2. Na czas pisania tej pracy modeli jest ponad 660000.
 Modele dostępne w Transformers można zainstalować poprzez instalację biblioteki PyTorch, Tensorflow oraz Flex jak i poprzez bezpośrednie pobranie ze strony projektu na Githubie.
@@ -61,18 +61,18 @@ brak papierów o yolov8.
 
 ### 2.2 Modele segmentacji semantycznej 3D
 
-Oprócz klasycznych modeli zajmujących się segmentacją obrazów trzeba również wyróżnić modele specjalizujące się segmentacją chmur punktów, zawierających oprócz informacji o kolorach również dane o głębi zarejestrowanego obrazu. Są one o wiele mniej popularne z uwagi na znacznie rzadsze koszystanie z obrazów RGBD - więcej osób posiada obiektywy do wykonywania zdjęć 2D, w szczególności smartfony, niż sprzęt pozwalający na pozyskanie danych o głębi zdjęcia. Postanowiono na opisanie zasady działania modeli, które odznaczyły się w testach wydajnościowych w momencie pisania tej pracy na zbiorach SemanticKITTI, ScanNet200, ScanNet++ - PTv3 + PTT, oraz na S3DIS - OneFormer3D.
+Oprócz klasycznych modeli zajmujących się segmentacją obrazów trzeba również wyróżnić modele specjalizujące się segmentacją chmur punktów, zawierających oprócz informacji o kolorach również dane o głębi zarejestrowanego obrazu. Są one o wiele mniej popularne z uwagi na znacznie rzadsze korzystanie z obrazów RGBD - więcej osób posiada obiektywy do wykonywania zdjęć 2D, w szczególności smartfony, niż sprzęt pozwalający na pozyskanie danych o głębi zdjęcia. Postanowiono na opisanie zasady działania modeli, które odznaczyły się w testach wydajnościowych w momencie pisania tej pracy na zbiorach SemanticKITTI, ScanNet200, ScanNet++ - PTv3 + PTT, oraz na S3DIS - OneFormer3D.
 
 #### 2.2.1 Point Transformer V3
 
-Najczęściej wskazywanym modelem na stonie gromadzącej modele State of the Art związanych z segemntacją semantyczna 3d [Przypis 7] jest Point Transformer V3. Jest on rozwinięciem swojego poprzednika - PTv2. Autorzy chwalą się, że jest szybszy, a zarazem elastyczny i zachowuje prostotę.
-Dane z chmury punktów przed podaniem ich do modelu są normalizowane. Stosowana jest normalizacja warstw zamiast normalizaji batchy danych. Następnie dane są poddawane gridpoolinowi, co jest cechą zachowaną z poprzedniej iteracji modelu. Dodano warstwę konwolucyjną, która pozwala na zamianę kodowania pozycyjnego punktów na kodowanie xCPE (enhanced Conditional Position Embedding), co dało lepszą dokładność danych wynikowych przy minimalnie większym nakładzie obliczeniowym.
+Najczęściej wskazywanym modelem na stronie gromadzącej modele State of the Art związanych z segmentacją semantyczna 3d [Przypis 7] jest Point Transformer V3. Jest on rozwinięciem swojego poprzednika - PTv2. Autorzy chwalą się, że jest szybszy, a zarazem elastyczny i zachowuje prostotę.
+Dane z chmury punktów przed podaniem ich do modelu są normalizowane. Stosowana jest normalizacja warstw zamiast normalizacji batchy danych. Następnie dane są poddawane gridpoolinowi, co jest cechą zachowaną z poprzedniej iteracji modelu. Dodano warstwę konwolucyjną, która pozwala na zamianę kodowania pozycyjnego punktów na kodowanie xCPE (enhanced Conditional Position Embedding). Poskutkowało to większą dokładnością danych wynikowych przy minimalnie większym nakładzie obliczeniowym.
 
 #### 2.2.2 OneFormer3D
 
-OneFormer3D jest określany przez twórców jako model do ujednoliconej segmentacji chmury punktów. Chwalą się, że jako pierwszy model łączy backbone z U-Net z dekoderem tranformer, co daje wzrot wydajności pod kątem czasu operacji i bardziej zoptymalizowanego użycia pamięci.
+OneFormer3D jest określany przez twórców jako model do ujednoliconej segmentacji chmury punktów. Chwalą się, że jako pierwszy model łączy backbone z U-Net z dekoderem transformer, co daje wzrost wydajności pod kątem czasu operacji i bardziej zoptymalizowanego użycia pamięci.
 Zasada działania modelu wygląda w następujący sposób:
-Na podstawie koloru oraz położenia danego punktu w przestrzeni ekstraktowane są cechy chmury przez 3D U-Net. Następnie chechy punktów są uśredniane za pomocą "flexible poolingu", a same punkty są łączone w nazywane przez autorów superpunkty. Cechy tych punktów są przekazywane do dekodera o 6 warstwach. W celu trenowania sieci można również podać dodatkowe zapytania semantyczne i instancyjne. Dekoder zwraca zestaw kernel segmentowanych masek obiektów ze zdjęcia. Mogą to być maski będące wynikiem segmentacji instancyjnej, semantycznej czy panoptycznej.
+Na podstawie koloru oraz położenia danego punktu w przestrzeni ekstraktowane są cechy chmury przez 3D U-Net. Następnie cechy punktów są uśredniane za pomocą "flexible poolingu", a same punkty są łączone w nazywane przez autorów superpunkty. Cechy tych punktów są przekazywane do dekodera o 6 warstwach. W celu trenowania sieci można również podać dodatkowe zapytania semantyczne i instancyjne. Dekoder zwraca zestaw kernel segmentowanych masek obiektów ze zdjęcia. Mogą to być maski będące wynikiem segmentacji instancyjnej, semantycznej czy panoptycznej.
 
 ## 3. Metody tworzenia trójwymiarowej mapy semantycznej i jej wizualizacji
 
@@ -83,7 +83,7 @@ Tworzenie trójwymiarowej mapy semantycznej opiera się na połączeniu informac
 #### 3.1.1 Projekcja prosta
 
 Projekcja prosta jest zdecydowanie najłatwiejszą metodą do zaimplementowania. Polega na odwzorowaniu pikseli segmentowanego obrazu bądź z maski pochodzącej z segmentacji na odpowiadające im punkty chmury głębi.
-Metoda cechuje się prostotą, szybkościa implementacji oraz intuicyjnością. Nie mniej, zawiera wady w postaci braku uwzględnienia szczegółów geometrii obiektów i braku uwzględnienia niedoskonałości danych, w szczególności szumów pochodzących z odczytu głębi.
+Metoda cechuje się prostotą, szybkością implementacji oraz intuicyjnością. Nie mniej, zawiera wady w postaci braku uwzględnienia szczegółów geometrii obiektów i braku uwzględnienia niedoskonałości danych, w szczególności szumów pochodzących z odczytu głębi.
 
 #### 3.1.2 Metody iteracyjne
 
