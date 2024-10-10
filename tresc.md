@@ -139,7 +139,9 @@ Segmentacja 2D:
 - vgg16
 - modele rodziny yolov8-seg, yolo9-seg
 
-### 4.3 Wizualizajc adanych
+### 4.3 Wizualizajc danych
+
+Efekt programu jest wyświetlany jako zbiór kolorowych punktów wyświetlanych w trójwymiarowym układzie współrzędnych. Kolory służą do wskazania innego przypisania klasy w wyniku segmentacji danemu punktowi.
 
 ## Przypisy
 
