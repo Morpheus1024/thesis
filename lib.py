@@ -3,7 +3,7 @@ import numpy as np
 import open3d as o3d
 import pyrealsense2 as rs
 
-def get_rgb_and_depth_image() -> (np.ndarray, np.ndarray):
+def get_rgb_and_depth_image():
 
     '''
         Functions is looking for RealSense camera and returns color and depth image.
@@ -44,7 +44,7 @@ def get_rgb_and_depth_image() -> (np.ndarray, np.ndarray):
         print("Getting data...")
 
         while True:
-            for i in range(50):
+            for _ in range(50):
 
                 # Wait for a coherent pair of frames: depth and color
                 frames = pipeline.wait_for_frames()
@@ -74,6 +74,7 @@ def get_rgb_and_depth_image() -> (np.ndarray, np.ndarray):
 
             break
 
+        ply = rs.save_to_ply('cloude_points.ply')
         pipeline.stop()
         return color_image, depth_image
 
@@ -98,7 +99,7 @@ def get_point_cloud() -> o3d.geometry.PointCloud:
         pipeline_wrapper = rs.pipeline_wrapper(pipeline)
         pipeline_profile = config.resolve(pipeline_wrapper)
         device = pipeline_profile.get_device()
-        device_product_line = str(device.get_info(rs.camera_info.product_line))
+        #device_product_line = str(device.get_info(rs.camera_info.product_line))
     
         found_rgb = False
         for s in device.sensors:
@@ -118,29 +119,33 @@ def get_point_cloud() -> o3d.geometry.PointCloud:
     
         print("Getting data...")
 
-        depth_image = None
+        # depth_image = None
         color_image = None
         
-        for i in range(50):
+        for _ in range(20):
             frames = pipeline.wait_for_frames()
             aligned_frames = align.process(frames)
-            colorized = colorizer.process(frames)
+            #colorized = colorizer.process(frames)
 
             depth_frame = aligned_frames.get_depth_frame()
             color_frame = aligned_frames.get_color_frame()
 
+        ply = rs.save_to_ply("./output.ply")
+        print("done")
         pc.map_to(color_frame)
         points = pc.calculate(depth_frame)
 
-        vtx = np.asanyarray(points.get_vertices())
-        tex = np.asanyarray(points.get_texture_coordinates())
 
-        point_cloud = o3d.geometry.PointCloud()
-        point_cloud.points = o3d.utility.Vector3dVector(vtx.view(np.float32).reshape(-1, 3))
-        point_cloud.colors = o3d.utility.Vector3dVector(color_image.reshape(-1, 3) / 255.0)
+        #vtx = np.asanyarray(points.get_vertices())
+        #tex = np.asanyarray(points.get_texture_coordinates())
+
+        #point_cloud = o3d.geometry.PointCloud()
+        #point_cloud.points = o3d.utility.Vector3dVector(vtx.view(np.float32).reshape(-1, 3))
+        #point_cloud.colors = o3d.utility.Vector3dVector(color_image.reshape(-1, 3) / 255.0)
 
         pipeline.stop()
-        return point_cloud
+        #return point_cloud
+        return rs.pointcloud()
     
     except Exception as e:
         print(e)
