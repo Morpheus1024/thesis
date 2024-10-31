@@ -150,3 +150,55 @@ def get_point_cloud() -> o3d.geometry.PointCloud:
     except Exception as e:
         print(e)
         return None
+    
+    
+def save_ply_file(filename: str):
+    '''
+        Function is looking for RealSense camera and saves point cloud to .ply file.
+    '''
+    pc = rs.pointcloud()
+    points = rs.points()
+    pipeline = rs.pipeline()
+    config = rs.config()
+    config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
+
+    colorizer = rs.colorizer()
+
+    try:
+        frames = pipeline.wait_for_frames()
+        colorized = colorizer.process(frames)
+
+        ply = rs.save_to_ply(f"{filename}.ply")
+        ply.set_option(rs.save_to_ply.option_ply_binary, False)
+        ply.set_option(rs.save_to_ply.option_ply_normals, True)
+
+        print("Saving to {filename}.ply...")
+        ply.process(colorized)
+        print("Done")
+    except Exception as e:
+        print(e)
+
+    finally:
+        pipeline.stop()
+
+
+def segment_knn(photo, centroids_number: int):
+    '''
+        Function takes a photo and returns segmented photo using knn algorythm.
+    '''
+    # Convert the image to RGB
+    photo = cv2.cvtColor(photo, cv2.COLOR_BGR2RGB)
+    # Reshape the image to be a list of pixels
+    pixels = photo.reshape(-1, 3)
+    # Convert to float
+    pixels = np.float32(pixels)
+    # Define criteria, number of clusters and apply kmeans()
+    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 100, 0.2)
+    k = centroids_number
+    _, labels, (centers) = cv2.kmeans(pixels, k, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
+    # Convert back to 8 bit values
+    centers = np.uint8(centers)
+    segmented_data = centers[labels.flatten()]
+    # Reshape back to the original image dimension
+    segmented_image = segmented_data.reshape((photo.shape))
+    return segmented_image, labels, centers
