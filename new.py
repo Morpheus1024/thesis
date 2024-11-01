@@ -16,12 +16,11 @@ import matplotlib.pyplot as plt
 
 # plt.show()
 
+seed_list = [(100, 100), (200, 200), (300, 300), (400, 400)]
+
 image = cv2.imread("./image.png")
 
-image, labels, centers = lib.segment_knn(image, 10)
-print(labels)
-print(centers)
-
-plt.imshow(image)
+image_seg = lib.segment_watershed(image)
+plt.imshow(image_seg)#, cmap='gray')
 plt.show()
 

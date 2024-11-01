@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import open3d as o3d
 import pyrealsense2 as rs
+import torch
 
 def get_rgb_and_depth_image():
 
@@ -202,3 +203,150 @@ def segment_knn(photo, centroids_number: int):
     # Reshape back to the original image dimension
     segmented_image = segmented_data.reshape((photo.shape))
     return segmented_image, labels, centers
+
+def segment_thresholding(photo, threshold: int):
+    '''
+        Function takes a photo and returns segmented photo using thresholding algorythm.
+    '''
+    gray = cv2.cvtColor(photo, cv2.COLOR_BGR2GRAY)
+    _, segmented_image = cv2.threshold(gray, threshold, 255, cv2.THRESH_BINARY)
+    return segmented_image
+
+def segment_local_thresholding(photo):
+    '''
+        Function takes a photo and returns segmented photo using local thresholding algorythm.
+    '''
+    gray = cv2.cvtColor(photo, cv2.COLOR_BGR2GRAY)
+    segmented_image = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
+    return segmented_image
+
+def segment_canny(photo, lower_boundry=100, upper_boundry=200):
+    '''
+        Function takes a photo and returns segmented photo using canny algorythm.
+    '''
+    gray = cv2.cvtColor(photo, cv2.COLOR_BGR2GRAY)
+    segmented_image = cv2.Canny(gray, lower_boundry, upper_boundry)
+    return segmented_image
+    
+def segment_sobel(photo, kernel_size=3, gray=True):
+    '''
+        Function takes a photo and returns segmented photo using sobel algorythm.
+    '''
+    if kernel_size % 2 == 0:
+        raise ValueError("Kernel size must be odd")
+    
+    if gray:
+        gray = cv2.cvtColor(photo, cv2.COLOR_BGR2GRAY)
+        sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=kernel_size)
+        sobely = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=kernel_size)
+        segmented_image = cv2.addWeighted(cv2.convertScaleAbs(sobelx), 0.5, cv2.convertScaleAbs(sobely), 0.5, 0)
+    else:
+        sobelx = cv2.Sobel(photo, cv2.CV_64F, 1, 0, ksize=kernel_size)
+        sobely = cv2.Sobel(photo, cv2.CV_64F, 0, 1, ksize=kernel_size)
+        segmented_image = cv2.addWeighted(cv2.convertScaleAbs(sobelx), 0.5, cv2.convertScaleAbs(sobely), 0.5, 0)
+    return segmented_image
+
+
+def segment_region_growing(image, seed_point, threshold=10):
+    # Inicjalizacja rozmiarów obrazu i tworzenie macierzy oznaczającej przynależność do regionu
+    height, width, channels = image.shape
+    segmented_region = np.zeros((height, width), np.bool_)
+
+    # Lista pikseli do sprawdzenia, zaczynamy od punktu startowego
+    pixels_to_check = [seed_point]
+    # Wartość intensywności pikseli startowego dla wszystkich kanałów
+    seed_value = image[seed_point[0], seed_point[1], :]
+
+    while len(pixels_to_check) > 0:
+        # Pobieramy obecny piksel do sprawdzenia
+        current_pixel = pixels_to_check.pop(0)
+        x, y = current_pixel[0], current_pixel[1]
+
+        # Jeśli już odwiedzony, kontynuujemy
+        if segmented_region[x, y]:
+            continue
+
+        # Sprawdzamy, czy obecny piksel spełnia kryterium dla każdego kanału RGB
+        if np.all(np.abs(image[x, y, :] - seed_value) <= threshold):
+            # Jeśli tak, dodajemy do regionu
+            segmented_region[x, y] = True
+
+            # Sprawdzamy sąsiednie piksele w czterech kierunkach
+            if x > 0 and not segmented_region[x - 1, y]:
+                pixels_to_check.append((x - 1, y))
+            if x < height - 1 and not segmented_region[x + 1, y]:
+                pixels_to_check.append((x + 1, y))
+            if y > 0 and not segmented_region[x, y - 1]:
+                pixels_to_check.append((x, y - 1))
+            if y < width - 1 and not segmented_region[x, y + 1]:
+                pixels_to_check.append((x, y + 1))
+
+    return segmented_region
+
+
+def segment_watershed(image): 
+
+    # Załóżmy, że na wejściu jest obraz RGB, więc konwersja do skali szarości
+    gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+
+    # Redukcja szumów za pomocą rozmycia Gaussa
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+
+    # Wykonanie progowania Otsu
+    _, binary = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+
+    # Utworzenie obrazu z markerami za pomocą operacji morfologicznych
+    kernel = np.ones((3, 3), np.uint8)
+    sure_bg = cv2.dilate(binary, kernel, iterations=3)
+    
+    # Użycie operacji odległościowej, aby znaleźć pewne obszary tła
+    dist_transform = cv2.distanceTransform(binary, cv2.DIST_L2, 5)
+    _, sure_fg = cv2.threshold(dist_transform, 0.7 * dist_transform.max(), 255, 0)
+
+    # Znalezienie niepewnych obszarów (obszarów brzegowych)
+    sure_fg = np.uint8(sure_fg)
+    unknown = cv2.subtract(sure_bg, sure_fg)
+
+    # Oznaczenie markerów dla Watershed
+    _, markers = cv2.connectedComponents(sure_fg)
+    markers = markers + 1
+    markers[unknown == 255] = 0
+
+    # Zastosowanie algorytmu Watershed
+    cv2.watershed(image, markers)
+    image[markers == -1] = [0, 0, 255]  # Oznaczenie konturów na czerwono
+
+    # Zwrócenie wyniku
+    return image
+
+
+def use_MiDaS(image):
+    model_type = "DPT_ Large"
+    # model_type = "DPT_Hybrid"
+    #model_type = "MiDaS_small"
+
+    midas = torch.hub.load("intel-isl/MiDaS", model_type)
+
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    midas.to(device)
+    midas.eval()
+
+    midas_transforms = torch.hub.load("intel-isl/MiDaS", "transforms")
+
+    if model_type == "DPT_Large" or model_type == "DPT_Hybrid": transform = midas_transforms.dpt_transform
+    else: transform = midas_transforms.small_transform
+
+    input_batch = transform(image).to(device)
+
+    with torch.no_grad():
+        prediction = midas(input_batch)
+
+        prediction = torch.nn.functional.interpolate(
+            prediction.unsqueeze(1),
+            size=image.shape[:2],
+            mode="bicubic",
+            align_corners=False,
+        ).squeeze()
+
+    return prediction.cpu().numpy()
+
