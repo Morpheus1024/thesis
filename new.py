@@ -18,9 +18,13 @@ import matplotlib.pyplot as plt
 
 seed_list = [(100, 100), (200, 200), (300, 300), (400, 400)]
 
-image = cv2.imread("./image.png")
-
-image_seg = lib.segment_watershed(image)
-plt.imshow(image_seg)#, cmap='gray')
+image = cv2.imread("./image.jpg")
+image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+plt.imshow(image)#, cmap='gray')
 plt.show()
+
+# image_seg = lib.use_EVP(image)
+# print(image_seg)
+# plt.imshow(image_seg)#, cmap='gray')
+# plt.show()
 

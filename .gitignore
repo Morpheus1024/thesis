@@ -1,6 +1,7 @@
 
 inbox.py
 *.png
+*.jpg
 3d_map.ply
 /Literature
 tresc1*

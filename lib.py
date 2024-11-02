@@ -1,8 +1,14 @@
 import cv2
+import torch
 import numpy as np
 import open3d as o3d
 import pyrealsense2 as rs
-import torch
+import matplotlib.pyplot as plt
+#import tensorflow_hub as tf_hub
+#from transformers import AutoProcessor
+import torchvision.transforms as transforms
+from transformers import pipeline, AutoModel
+from transformers import OneFormerProcessor, OneFormerForUniversalSegmentation
 
 def get_rgb_and_depth_image():
 
@@ -350,3 +356,81 @@ def use_MiDaS(image):
 
     return prediction.cpu().numpy()
 
+def use_EVP(image):
+    # Use a pipeline as a high-level helper
+    evp = AutoModel.from_pretrained("MykolaL/evp_depth", trust_remote_code=True)
+
+    transform = transforms.ToTensor()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    image = transform(image).unsqueeze(0).to(device)
+    evp = evp.to(device)
+    depth = evp(image)
+
+    return depth
+
+
+def use_DeepLabV3(image): #TODO: check
+    model = torch.hub.load('pytorch/vision:v0.9.0', 'deeplabv3_resnet101', pretrained=True)
+    model.eval()
+
+    transform = torch.hub.load('pytorch/vision:v0.9.0', 'transforms', pretrained=True)
+
+    input_tensor = transform(image).unsqueeze(0)
+
+    with torch.no_grad():
+        output = model(input_tensor)['out'][0]
+        output_predictions = output.argmax(0)
+
+    return output_predictions
+
+def use_OneFormer(image, task = 'semantic'): 
+    '''
+        Function takes an image and returns segmented image using OneFormer model.
+        :param image: image to segment
+        :param task: 'semantic', 'instance' or 'panoptic'
+    '''
+    # https://huggingface.co/docs/transformers/main/en/model_doc/oneformer#transformers.OneFormerForUniversalSegmentation
+    processor = OneFormerProcessor.from_pretrained("shi-labs/oneformer_ade20k_swin_tiny")
+    model = OneFormerForUniversalSegmentation.from_pretrained("shi-labs/oneformer_ade20k_swin_tiny")
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    image = cv2.resize(image, (224, 224))
+    plt.imshow(image)
+    plt.show()
+
+    #image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    if isinstance(image.size, int):
+        image_size = (image.size, image.size)  # lub inna odpowiednia wartość
+    else:
+        image_size = image.size[::-1]
+
+    print(torch.cuda.is_available())
+
+
+    if task == 'semantic':
+        input_tensor = processor(image,['semantic'], return_tensors="pt")
+        output = model(**input_tensor)
+        #print(output)
+
+        #class_queries_logits = output.logits
+        #masks_queries_logits = output.masks_queries_logits
+        predicted_semantic_map = processor.post_process_semantic_segmentation(output, target_sizes=[image_size])[0]
+        return predicted_semantic_map
+
+    elif task == 'instance':
+        input_tensor = processor(image, ["instance"], return_tesnor="pt")
+        output = model(**input_tensor)
+
+        #class_queries_logits = output.class_queries_logits
+        #masks_queries_logits = output.masks_queries_logits
+        predicted_instance_map = processor.post_process_instance_segmentation(output, target_sizes=[image_size])[0]["segmentation"]
+        return predicted_instance_map
+
+    elif task == 'panoptic':
+        input_tensor = processor(image, ["panoptic"], return_tensors="pt")
+        output = model(**input_tensor)
+
+        #class_queries_logits = output.class_queries_logits
+        #masks_queries_logits = output.masks_queries_logits
+        predicted_panoptic_map = processor.post_process_panoptic_segmentation(output, target_sizes=[image_size])[0]["segmentation"]        
+        return predicted_panoptic_map
