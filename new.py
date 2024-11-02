@@ -19,12 +19,16 @@ import matplotlib.pyplot as plt
 seed_list = [(100, 100), (200, 200), (300, 300), (400, 400)]
 
 image = cv2.imread("./image.jpg")
-image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-plt.imshow(image)#, cmap='gray')
-plt.show()
 
-# image_seg = lib.use_EVP(image)
-# print(image_seg)
+
+# image_seg, logs = lib.use_SegFormer(image)
+# print("Wyświetlanie obrazu")
 # plt.imshow(image_seg)#, cmap='gray')
 # plt.show()
+# plt.imsave("image_seg.jpg", image_seg)
+# print("Wyświetlanie logów")
+# print(logs)
 
+depth = lib.use_MiDaS(image, model_type="DPT_Large")
+print("Wyświetlanie obrazu")
+plt.imsave('image_seg.jpg',depth)#, cmap='gray')

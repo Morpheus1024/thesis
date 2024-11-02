@@ -7,8 +7,10 @@ import matplotlib.pyplot as plt
 #import tensorflow_hub as tf_hub
 #from transformers import AutoProcessor
 import torchvision.transforms as transforms
-from transformers import pipeline, AutoModel
+from transformers import BeitForSemanticSegmentation
+from transformers import pipeline, AutoModel, AutoImageProcessor
 from transformers import OneFormerProcessor, OneFormerForUniversalSegmentation
+from transformers import SegformerImageProcessor, SegformerForSemanticSegmentation
 
 def get_rgb_and_depth_image():
 
@@ -194,7 +196,7 @@ def segment_knn(photo, centroids_number: int):
         Function takes a photo and returns segmented photo using knn algorythm.
     '''
     # Convert the image to RGB
-    photo = cv2.cvtColor(photo, cv2.COLOR_BGR2RGB)
+    #photo = cv2.cvtColor(photo, cv2.COLOR_BGR2RGB)
     # Reshape the image to be a list of pixels
     pixels = photo.reshape(-1, 3)
     # Convert to float
@@ -252,8 +254,7 @@ def segment_sobel(photo, kernel_size=3, gray=True):
         segmented_image = cv2.addWeighted(cv2.convertScaleAbs(sobelx), 0.5, cv2.convertScaleAbs(sobely), 0.5, 0)
     return segmented_image
 
-
-def segment_region_growing(image, seed_point, threshold=10):
+def segment_region_growing(image, seed_point: list, threshold=10):
     # Inicjalizacja rozmiarów obrazu i tworzenie macierzy oznaczającej przynależność do regionu
     height, width, channels = image.shape
     segmented_region = np.zeros((height, width), np.bool_)
@@ -288,7 +289,6 @@ def segment_region_growing(image, seed_point, threshold=10):
                 pixels_to_check.append((x, y + 1))
 
     return segmented_region
-
 
 def segment_watershed(image): 
 
@@ -325,11 +325,10 @@ def segment_watershed(image):
     # Zwrócenie wyniku
     return image
 
-
-def use_MiDaS(image):
-    model_type = "DPT_ Large"
+def use_MiDaS(image, model_type = "MiDaS_small"):
+    #model_type = "DPT_ Large"
     # model_type = "DPT_Hybrid"
-    #model_type = "MiDaS_small"
+    model_type = "MiDaS_small"
 
     midas = torch.hub.load("intel-isl/MiDaS", model_type)
 
@@ -356,7 +355,7 @@ def use_MiDaS(image):
 
     return prediction.cpu().numpy()
 
-def use_EVP(image):
+def use_EVP(image): #TODO: do naprawy XDD
     # Use a pipeline as a high-level helper
     evp = AutoModel.from_pretrained("MykolaL/evp_depth", trust_remote_code=True)
 
@@ -367,7 +366,6 @@ def use_EVP(image):
     depth = evp(image)
 
     return depth
-
 
 def use_DeepLabV3(image): #TODO: check
     model = torch.hub.load('pytorch/vision:v0.9.0', 'deeplabv3_resnet101', pretrained=True)
@@ -434,3 +432,51 @@ def use_OneFormer(image, task = 'semantic'):
         #masks_queries_logits = output.masks_queries_logits
         predicted_panoptic_map = processor.post_process_panoptic_segmentation(output, target_sizes=[image_size])[0]["segmentation"]        
         return predicted_panoptic_map
+    
+def use_BEiT(image):
+    #https://huggingface.co/docs/transformers/main/en/model_doc/beit#transformers.BeitForImageClassification
+
+    '''
+    '''
+
+    image_processor = AutoImageProcessor.from_pretrained("microsoft/beit-base-finetuned-ade-640-640")
+    model = BeitForSemanticSegmentation.from_pretrained("microsoft/beit-base-finetuned-ade-640-640")
+
+    input = image_processor(images=image, return_tensors="pt")
+    output = model(**input)
+
+    logits = output.logits
+    predicted_segmentation = torch.argmax(logits, dim=1).squeeze().cpu().numpy()
+
+    return predicted_segmentation, logits
+
+def use_SegFormer(image):
+    #https://huggingface.co/nvidia/segformer-b0-finetuned-ade-512-512
+
+    # from transformers import SegformerImageProcessor, SegformerForSemanticSegmentation
+    # from PIL import Image``
+    # import requests
+
+    # processor = SegformerImageProcessor.from_pretrained("nvidia/segformer-b0-finetuned-ade-512-512")
+    # model = SegformerForSemanticSegmentation.from_pretrained("nvidia/segformer-b0-finetuned-ade-512-512")
+
+    # url = "http://images.cocodataset.org/val2017/000000039769.jpg"
+    # image = Image.open(requests.get(url, stream=True).raw)
+
+    # inputs = processor(images=image, return_tensors="pt")
+    # outputs = model(**inputs)
+    # logits = outputs.logits  # shape (batch_size, num_labels, height/4, width/4)
+
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    image = cv2.resize(image, (512, 512))
+
+    processor = SegformerImageProcessor.from_pretrained("nvidia/segformer-b0-finetuned-ade-512-512")
+    model = SegformerForSemanticSegmentation.from_pretrained("nvidia/segformer-b0-finetuned-ade-512-512")
+
+    input = processor(images=image, return_tensors="pt")
+    output = model(**input)
+    logits = output.logits
+
+    predicted_segmentation = torch.argmax(logits, dim=1).squeeze().cpu().numpy()
+    return predicted_segmentation, logits
+    
