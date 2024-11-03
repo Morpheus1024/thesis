@@ -1,5 +1,7 @@
 import cv2
 import lib
+import numpy as np
+from PIL import Image
 import matplotlib.pyplot as plt
 # import open3d as o3d
 
@@ -18,17 +20,39 @@ import matplotlib.pyplot as plt
 
 seed_list = [(100, 100), (200, 200), (300, 300), (400, 400)]
 
-image = cv2.imread("./image.jpg")
+#image = cv2.imread("./image.jpg")
+image = Image.open("./image.jpg")
 
 
-# image_seg, logs = lib.use_SegFormer(image)
-# print("Wyświetlanie obrazu")
-# plt.imshow(image_seg)#, cmap='gray')
-# plt.show()
-# plt.imsave("image_seg.jpg", image_seg)
-# print("Wyświetlanie logów")
-# print(logs)
+# SegFormer
+#semantic_image, _, _ = lib.use_SegFormer(image)
+#plt.imsave("./seg_image.jpg", semantic_image)
 
-depth = lib.use_MiDaS(image, model_type="DPT_Large")
-print("Wyświetlanie obrazu")
-plt.imsave('image_seg.jpg',depth)#, cmap='gray')
+#OneFormer
+# semantic_image, _,_ = lib.use_OneFormer(image)
+# plt.imsave("./seg_image.jpg", semantic_image)
+
+#MiDaS
+# depth_image = lib.use_MiDaS(image)
+# plt.imsave("./depth_image.jpg", depth_image)
+
+#EVP
+#lib.use_EVP(image)
+# plt.imsave("./depth_image.jpg", depth_image)
+
+#DeepLabV3
+# semantic_image, _, _ = lib.use_DeepLabV3(image)
+# plt.imsave("./seg_image.jpg", semantic_image)
+
+# #DeepLabV3_xx
+# semantic_image, _, _ = lib.use_DeepLabV3_xx(image)
+# plt.imsave("./seg_image.jpg", semantic_image)
+
+#DeepLabV3_xx
+semantic_image, _, _ = lib.use_DeepLabV3_by_Google(image)
+plt.imsave("./seg_image.jpg", semantic_image)
+
+print("## DONE ##")
+
+
+
