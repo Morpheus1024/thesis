@@ -6,8 +6,19 @@ import matplotlib.pyplot as plt
 # import open3d as o3d
 
 
-# color_image, depth_image = lib.get_rgb_and_depth_image()
+color_image, depth_image, camera_params= lib.get_rgb_and_depth_image(print_logs=True)
 # points_cloud = lib.get_point_cloud()
+
+plt.imsave("images/color_image.png", color_image)
+plt.imsave("images/depth_image.png", depth_image)
+#print(camera_params)
+
+# print(camera_params.fx, camera_params.fy)
+
+
+point_cloud = lib.create_semantic_3D_map(color_image, depth_image, fx = camera_params.fx, fy = camera_params.fy, print_logs=True)
+
+
 
 
 # fig = plt.figure()
@@ -18,10 +29,10 @@ import matplotlib.pyplot as plt
 
 # plt.show()
 
-seed_list = [(100, 100), (200, 200), (300, 300), (400, 400)]
+#seed_list = [(100, 100), (200, 200), (300, 300), (400, 400)]
 
 #image = cv2.imread("./image.jpg")
-image = Image.open("./image.jpg")
+#image = Image.open("./image.jpg")
 
 
 # SegFormer
@@ -53,8 +64,11 @@ image = Image.open("./image.jpg")
 # plt.imsave("./seg_image.jpg", semantic_image)
 
 #ResNet50   
-semantic_image, _, _ = lib.use_ResNet50(image)
-plt.imsave("./seg_image.jpg", semantic_image)
+# semantic_image, _, _ = lib.use_ResNet50(image)
+# plt.imsave("./seg_image.jpg", semantic_image)
+
+#print(lib.get_realsense_camera_config())
+
 
 print("## DONE ##")
 

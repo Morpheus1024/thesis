@@ -22,11 +22,13 @@ def generate_color_palette(n):
     return palette
 
 
-def get_rgb_and_depth_image():
+def get_rgb_and_depth_image(print_logs = False):
 
     '''
-        Functions is looking for RealSense camera and returns color and depth image.
+        Functions is looking for RealSense camera.
+        If present, returns color and depth image.
         If camera is not found, function returns None, None
+
     '''
 
     try:
@@ -44,7 +46,7 @@ def get_rgb_and_depth_image():
         for s in device.sensors:
             if s.get_info(rs.camera_info.name) == 'RGB Camera':
                 found_rgb = True
-                print("Camera found")
+                if print_logs: print("Camera found")
                 break
         if not found_rgb:
             print("No RGB camera found")
@@ -53,6 +55,8 @@ def get_rgb_and_depth_image():
         config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
         config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
         pipeline.start(config)
+        profile = pipeline.get_active_profile()
+        camera_params = profile.get_stream(rs.stream.depth).as_video_stream_profile().get_intrinsics()
         colorizer = rs.colorizer()
         align_to = rs.stream.color
         align = rs.align(align_to)
@@ -60,10 +64,10 @@ def get_rgb_and_depth_image():
 
         color_image = None
         depth_image = None
-        print("Getting data...")
+        if print_logs: print("Getting data...")
 
         while True:
-            for _ in range(50):
+            for i in range(50):
 
                 # Wait for a coherent pair of frames: depth and color
                 frames = pipeline.wait_for_frames()
@@ -81,25 +85,16 @@ def get_rgb_and_depth_image():
                 color_image = np.asanyarray(color_frame.get_data())
                 color_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB)
 
-                # Apply colormap on depth image (image must be converted to 8-bit per pixel first)
-                depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.033), cv2.COLORMAP_JET)
-
-                depth_colormap_dim = depth_colormap.shape
-                color_colormap_dim = color_image.shape
-
-                # If depth and color resolutions are different, resize color image to match depth image for display
-                if depth_colormap_dim != color_colormap_dim:
-                    color_image = cv2.resize(color_image, dsize=(depth_colormap_dim[1], depth_colormap_dim[0]), interpolation=cv2.INTER_AREA)
 
             break
 
-        ply = rs.save_to_ply('cloude_points.ply')
+        #ply = rs.save_to_ply('cloude_points.ply')
         pipeline.stop()
-        return color_image, depth_image
+        return color_image, depth_image, camera_params
 
     except Exception as e:
         print(e)
-        return None, None
+        return None, None, None
     
 
 def get_point_cloud() -> o3d.geometry.PointCloud:
@@ -199,6 +194,91 @@ def save_ply_file(filename: str):
 
     finally:
         pipeline.stop()
+
+def get_realsense_camera_config() -> rs.intrinsics:
+    '''
+        Function is looking for RealSense camera and returns its configuration.
+    '''
+    pipeline = rs.pipeline()
+    config = rs.config()
+
+    pipeline_wrapper = rs.pipeline_wrapper(pipeline)
+    pipeline_profile = config.resolve(pipeline_wrapper)
+    device = pipeline_profile.get_device()
+    #device_product_line = str(device.get_info(rs.camera_info.product_line))
+
+    found_rgb = False
+    for s in device.sensors:
+        if s.get_info(rs.camera_info.name) == 'RGB Camera':
+            found_rgb = True
+            break
+    if not found_rgb:
+        print("No RGB camera found")
+        return None
+    
+    pipeline.start(config)
+    pipeline.stop()
+    profile = pipeline.get_active_profile()
+    depth_intrinsics = profile.get_stream(rs.stream.depth).as_video_stream_profile().get_intrinsics()
+    
+    
+    return depth_intrinsics
+    
+def create_semantic_3D_map(segmented_color_image, depth_image, fx: float, fy: float, z_scale = 0.001, print_logs = False):
+    """
+    Create a 3D semantic map from the segmented color image and the depth image.
+
+    Parameters:
+    segmented_color_image (numpy.ndarray): Segmented RGB image.
+    depth_image (numpy.ndarray): Depth image corresponding to the segmented RGB image.
+
+    Returns:
+    open3d.geometry.PointCloud: A 3D point cloud representing the semantic map.
+    """
+    # Sprawdzenie, czy obrazy mają takie same wymiary
+    if segmented_color_image.shape[:2] != depth_image.shape:
+        raise ValueError("The segmented color image and the depth image must have the same dimensions.")
+
+    # Przygotowanie pustej listy na punkty i kolory
+    points = []
+    colors = []
+
+    # Pobranie parametrów kalibracyjnych kamery (zakładamy standardowe parametry kamery RealSense)
+    #fx, fy = 600, 600  # Ogniskowa kamery (w pixelach)
+    #cx, cy = 320, 240  # Środek obrazu (w pixelach)
+    cx = segmented_color_image.shape[1] // 2
+    cy = segmented_color_image.shape[0] // 2
+
+    if print_logs: print(f"cx: {cx}, cy: {cy}")
+
+    # Iteracja po pikselach obrazu
+    for v in range(depth_image.shape[0]):
+        for u in range(depth_image.shape[1]):
+            z = depth_image[v, u] * z_scale  # Zamiana wartości głębi z milimetrów na metry
+            if z == 0:
+                continue  # Pomijanie pikseli bez danych głębi
+
+            # Przeliczenie współrzędnych pikseli na współrzędne 3D
+            x = (u - cx) * z / fx
+            y = (v - cy) * z / fy
+
+            # Ponieważ obrazy są wyrównane, możemy bezpośrednio przypisać kolor z segmented_color_image
+            points.append([x, y, z])
+            colors.append(segmented_color_image[v, u, :] / 255.0)  # Normalizacja wartości koloru do przedziału [0, 1]
+
+
+    if print_logs: 
+        #print(points)
+        #print(colors)
+
+    # Tworzenie chmury punktów Open3D
+    point_cloud = o3d.geometry.PointCloud()
+    point_cloud.points = o3d.utility.Vector3dVector(np.array(points))
+    point_cloud.colors = o3d.utility.Vector3dVector(np.array(colors))
+
+    return point_cloud
+    
+
 
 def segment_knn(photo, centroids_number: int):
     '''
