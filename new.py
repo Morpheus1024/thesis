@@ -48,8 +48,12 @@ image = Image.open("./image.jpg")
 # semantic_image, _, _ = lib.use_DeepLabV3_xx(image)
 # plt.imsave("./seg_image.jpg", semantic_image)
 
-#DeepLabV3_xx
-semantic_image, _, _ = lib.use_DeepLabV3_by_Google(image)
+#DeepLabV3_by_google
+# semantic_image, _, _ = lib.use_DeepLabV3_by_Google(image)
+# plt.imsave("./seg_image.jpg", semantic_image)
+
+#ResNet50   
+semantic_image, _, _ = lib.use_ResNet50(image)
 plt.imsave("./seg_image.jpg", semantic_image)
 
 print("## DONE ##")

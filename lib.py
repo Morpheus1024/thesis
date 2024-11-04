@@ -373,6 +373,32 @@ def use_EVP(image): #TODO: do naprawy XDD
     results = depth_estimation(image)
     print(results)
 
+def use_ResNet50(image):
+    segmentation = pipeline("image-segmentation", model="facebook/detr-resnet-50-panoptic")
+    results = segmentation(image)
+    #print(results)
+    #_check_results_pipeline(results)
+
+    colors = generate_color_palette(len(results))
+
+    semantic_masks = []
+    semantic_labels = []
+
+    for i in range(len(results)):
+        semantic_masks.append(results[i]['mask'])
+        semantic_labels.append(results[i]['label'])
+
+    masked_image = np.zeros_like(image)
+    for i in range(len(results)):
+        mask = np.array(semantic_masks[i])
+        for j in range(3):
+            masked_image[:,:,j] = masked_image[:,:,j] + mask * colors[i][j]
+    
+    masked_image_with_legend = _add_legend_next_to_segmented_imega(masked_image, semantic_labels, colors)
+
+    return masked_image_with_legend, semantic_labels, semantic_masks
+    
+
 def use_DeepLabV3(image): #DONE
 
     segmentation = pipeline("image-segmentation", model=f"apple/deeplabv3-mobilevit-small")
