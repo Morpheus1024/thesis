@@ -7,16 +7,21 @@ import matplotlib.pyplot as plt
 
 
 color_image, depth_image, camera_params= lib.get_rgb_and_depth_image(print_logs=True)
+
+#depth_from_model = lib.use_MiDaS(color_image)
 # points_cloud = lib.get_point_cloud()
 
 plt.imsave("images/color_image.png", color_image)
 plt.imsave("images/depth_image.png", depth_image)
+#plt.imsave("images/depth_from_model.png", depth_from_model)
 #print(camera_params)
 
 # print(camera_params.fx, camera_params.fy)
+print("segmenting image")
+color_image, _, _ = lib.use_OneFormer(color_image)
+plt.imsave("images/seg_image.png", color_image)
 
-
-point_cloud = lib.create_semantic_3D_map(color_image, depth_image, fx = camera_params.fx, fy = camera_params.fy, print_logs=True)
+point_cloud = lib.create_semantic_3D_map(color_image, depth_image, fx = camera_params.fx, fy = camera_params.fy, print_logs=True, save_ply=True)
 
 
 

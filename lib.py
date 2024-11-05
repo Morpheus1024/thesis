@@ -2,6 +2,7 @@ import cv2
 import torch
 import numpy as np
 import open3d as o3d
+from PIL import Image
 import pyrealsense2 as rs
 import matplotlib.pyplot as plt
 #import tensorflow_hub as tf_hub
@@ -166,7 +167,7 @@ def get_point_cloud() -> o3d.geometry.PointCloud:
         return None
     
     
-def save_ply_file(filename: str):
+def save_ply_file_from_realsense(filename: str):
     '''
         Function is looking for RealSense camera and saves point cloud to .ply file.
     '''
@@ -224,7 +225,7 @@ def get_realsense_camera_config() -> rs.intrinsics:
     
     return depth_intrinsics
     
-def create_semantic_3D_map(segmented_color_image, depth_image, fx: float, fy: float, z_scale = 0.001, print_logs = False):
+def create_semantic_3D_map(segmented_color_image, depth_image, fx: float, fy: float, z_scale = 0.001, print_logs = False, save_ply = False): #MARK: 3D semantic map
     """
     Create a 3D semantic map from the segmented color image and the depth image.
 
@@ -235,7 +236,7 @@ def create_semantic_3D_map(segmented_color_image, depth_image, fx: float, fy: fl
     Returns:
     open3d.geometry.PointCloud: A 3D point cloud representing the semantic map.
     """
-    # Sprawdzenie, czy obrazy mają takie same wymiary
+
     if segmented_color_image.shape[:2] != depth_image.shape:
         raise ValueError("The segmented color image and the depth image must have the same dimensions.")
 
@@ -244,8 +245,6 @@ def create_semantic_3D_map(segmented_color_image, depth_image, fx: float, fy: fl
     colors = []
 
     # Pobranie parametrów kalibracyjnych kamery (zakładamy standardowe parametry kamery RealSense)
-    #fx, fy = 600, 600  # Ogniskowa kamery (w pixelach)
-    #cx, cy = 320, 240  # Środek obrazu (w pixelach)
     cx = segmented_color_image.shape[1] // 2
     cy = segmented_color_image.shape[0] // 2
 
@@ -264,17 +263,26 @@ def create_semantic_3D_map(segmented_color_image, depth_image, fx: float, fy: fl
 
             # Ponieważ obrazy są wyrównane, możemy bezpośrednio przypisać kolor z segmented_color_image
             points.append([x, y, z])
-            colors.append(segmented_color_image[v, u, :] / 255.0)  # Normalizacja wartości koloru do przedziału [0, 1]
+            color = segmented_color_image[v, u, :3] / 255.0  # Normalizacja wartości koloru do zakresu [0, 1]
+            colors.append(color)
 
-
+    print(colors[-1])
     if print_logs: 
-        #print(points)
-        #print(colors)
+        print("Przeanalizowano piksele i naniesiono na chmurę głębi")
+        print(f"points len: {len(points)}")
+        print(f"colors len: {len(colors)}")
+
+
 
     # Tworzenie chmury punktów Open3D
     point_cloud = o3d.geometry.PointCloud()
-    point_cloud.points = o3d.utility.Vector3dVector(np.array(points))
-    point_cloud.colors = o3d.utility.Vector3dVector(np.array(colors))
+    point_cloud.points = o3d.utility.Vector3dVector(np.array(points, dtype=np.float64))
+    point_cloud.colors = o3d.utility.Vector3dVector(np.array(colors, dtype=np.float64))
+
+
+    if save_ply: 
+        o3d.io.write_point_cloud("semantic_map.ply", point_cloud)
+        if print_logs: print("Ply file saved")
 
     return point_cloud
     
@@ -453,7 +461,9 @@ def use_EVP(image): #TODO: do naprawy XDD
     results = depth_estimation(image)
     print(results)
 
-def use_ResNet50(image):
+def use_ResNet50(image, add_legend = False): #DONE
+    image = _cv2_to_pil(image)
+
     segmentation = pipeline("image-segmentation", model="facebook/detr-resnet-50-panoptic")
     results = segmentation(image)
     #print(results)
@@ -474,12 +484,12 @@ def use_ResNet50(image):
         for j in range(3):
             masked_image[:,:,j] = masked_image[:,:,j] + mask * colors[i][j]
     
-    masked_image_with_legend = _add_legend_next_to_segmented_imega(masked_image, semantic_labels, colors)
+    if add_legend: masked_image = _add_legend_next_to_segmented_imega(masked_image, semantic_labels, colors)
 
-    return masked_image_with_legend, semantic_labels, semantic_masks
+    return masked_image, semantic_labels, semantic_masks
     
 
-def use_DeepLabV3(image): #DONE
+def use_DeepLabV3(image, add_legend = False): #DONE
 
     segmentation = pipeline("image-segmentation", model=f"apple/deeplabv3-mobilevit-small")
     results = segmentation(image)
@@ -499,11 +509,11 @@ def use_DeepLabV3(image): #DONE
         for j in range(3):
             masked_image[:,:,j] = masked_image[:,:,j] + mask * colors[i][j]
     
-    masked_image_with_legend = _add_legend_next_to_segmented_imega(masked_image, semantic_labels, colors)
+    if add_legend: masked_image = _add_legend_next_to_segmented_imega(masked_image, semantic_labels, colors)
 
-    return masked_image_with_legend, semantic_labels, semantic_masks
+    return masked_image, semantic_labels, semantic_masks
 
-def use_DeepLabV3_xx(image): #DONE
+def use_DeepLabV3_xx(image, add_legend = False): #DONE
     segmentation = pipeline("image-segmentation", model="apple/deeplabv3-mobilevit-xx-small")
     results = segmentation(image)
 
@@ -522,11 +532,11 @@ def use_DeepLabV3_xx(image): #DONE
         for j in range(3):
             masked_image[:,:,j] = masked_image[:,:,j] + mask * colors[i][j]
     
-    masked_image_with_legend = _add_legend_next_to_segmented_imega(masked_image, semantic_labels, colors)
+    if add_legend: masked_image = _add_legend_next_to_segmented_imega(masked_image, semantic_labels, colors)
 
-    return masked_image_with_legend, semantic_labels, semantic_masks
+    return masked_image, semantic_labels, semantic_masks
 
-def use_DeepLabV3_by_Google(image): #DONE
+def use_DeepLabV3_by_Google(image, add_legend = False): #DONE
     segmentation = pipeline("image-segmentation", model="google/deeplabv3_mobilenet_v2_1.0_513")
     results = segmentation(image)
 
@@ -545,17 +555,19 @@ def use_DeepLabV3_by_Google(image): #DONE
         for j in range(3):
             masked_image[:,:,j] = masked_image[:,:,j] + mask * colors[i][j]
     
-    masked_image_with_legend = _add_legend_next_to_segmented_imega(masked_image, semantic_labels, colors)
+    if add_legend: masked_image = _add_legend_next_to_segmented_imega(masked_image, semantic_labels, colors)
 
-    return masked_image_with_legend, semantic_labels, semantic_masks
+    return masked_image, semantic_labels, semantic_masks
 
-def use_OneFormer(image, task = 'semantic', model_size = 'large'): #DONE
+def use_OneFormer(image, task = 'semantic', model_size = 'large', add_legend = False): #DONE
     '''
         Function takes an image and returns segmented image using OneFormer model.
         :param image: image to segment
         :param task: 'semantic', 'instance' or 'panoptic'
     '''
     # https://huggingface.co/docs/transformers/main/en/model_doc/oneformer#transformers.OneFormerForUniversalSegmentation
+
+    image = _cv2_to_pil(image)
 
     segmentation = pipeline("image-segmentation", model=f"shi-labs/oneformer_ade20k_swin_{model_size}")
     results = segmentation(image)
@@ -574,9 +586,9 @@ def use_OneFormer(image, task = 'semantic', model_size = 'large'): #DONE
         for j in range(3):
             masked_image[:,:,j] = masked_image[:,:,j] + mask * colors[i][j]
 
-    masked_image_with_legend = _add_legend_next_to_segmented_imega(masked_image, semantic_labels, colors)
+    if add_legend: masked_image = _add_legend_next_to_segmented_imega(masked_image, semantic_labels, colors)
 
-    return masked_image_with_legend, semantic_labels, semantic_masks
+    return masked_image, semantic_labels, semantic_masks
 
 def use_BEiT(image):
     #https://huggingface.co/docs/transformers/main/en/model_doc/beit#transformers.BeitForImageClassification
@@ -595,7 +607,7 @@ def use_BEiT(image):
 
     return predicted_segmentation, logits
 
-def use_SegFormer(image): #DONE
+def use_SegFormer(image, add_legend = False): #DONE
     #https://huggingface.co/nvidia/segformer-b0-finetuned-ade-512-512
 
     semantic_segmentation = pipeline("image-segmentation", model="nvidia/segformer-b0-finetuned-ade-512-512")#, device=0)
@@ -615,7 +627,7 @@ def use_SegFormer(image): #DONE
         for j in range(3):
             masked_image[:,:,j] = masked_image[:,:,j] + mask * colors[i][j]
 
-    masked_image_with_legend = _add_legend_next_to_segmented_imega(masked_image, semantic_labels, colors)
+    if add_legend: masked_image_with_legend = _add_legend_next_to_segmented_imega(masked_image, semantic_labels, colors)
 
     return masked_image_with_legend, semantic_labels, semantic_masks
     
@@ -648,3 +660,6 @@ def _check_results_pipeline(results):
     for i in range(len(results)):
         mask = results[i]['mask']
         print(f"Mask: {mask}")
+
+def _cv2_to_pil(image):
+    return Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
