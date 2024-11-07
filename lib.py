@@ -150,16 +150,7 @@ def get_point_cloud() -> o3d.geometry.PointCloud:
         pc.map_to(color_frame)
         points = pc.calculate(depth_frame)
 
-
-        #vtx = np.asanyarray(points.get_vertices())
-        #tex = np.asanyarray(points.get_texture_coordinates())
-
-        #point_cloud = o3d.geometry.PointCloud()
-        #point_cloud.points = o3d.utility.Vector3dVector(vtx.view(np.float32).reshape(-1, 3))
-        #point_cloud.colors = o3d.utility.Vector3dVector(color_image.reshape(-1, 3) / 255.0)
-
         pipeline.stop()
-        #return point_cloud
         return rs.pointcloud()
     
     except Exception as e:
@@ -206,7 +197,6 @@ def get_realsense_camera_config() -> rs.intrinsics:
     pipeline_wrapper = rs.pipeline_wrapper(pipeline)
     pipeline_profile = config.resolve(pipeline_wrapper)
     device = pipeline_profile.get_device()
-    #device_product_line = str(device.get_info(rs.camera_info.product_line))
 
     found_rgb = False
     for s in device.sensors:
@@ -240,30 +230,24 @@ def create_semantic_3D_map(segmented_color_image, depth_image, fx: float, fy: fl
     if segmented_color_image.shape[:2] != depth_image.shape:
         raise ValueError("The segmented color image and the depth image must have the same dimensions.")
 
-    # Przygotowanie pustej listy na punkty i kolory
     points = []
     colors = []
 
-    # Pobranie parametrów kalibracyjnych kamery (zakładamy standardowe parametry kamery RealSense)
     cx = segmented_color_image.shape[1] // 2
     cy = segmented_color_image.shape[0] // 2
 
     if print_logs: print(f"cx: {cx}, cy: {cy}")
 
-    # Iteracja po pikselach obrazu
     for v in range(depth_image.shape[0]):
         for u in range(depth_image.shape[1]):
-            z = depth_image[v, u] * z_scale  # Zamiana wartości głębi z milimetrów na metry
+            z = depth_image[v, u] * z_scale  
             if z == 0:
-                continue  # Pomijanie pikseli bez danych głębi
-
-            # Przeliczenie współrzędnych pikseli na współrzędne 3D
+                continue  
             x = (u - cx) * z / fx
             y = (v - cy) * z / fy
 
-            # Ponieważ obrazy są wyrównane, możemy bezpośrednio przypisać kolor z segmented_color_image
             points.append([x, y, z])
-            color = segmented_color_image[v, u, :3] / 255.0  # Normalizacja wartości koloru do zakresu [0, 1]
+            color = segmented_color_image[v, u, :3] / 255.0  
             colors.append(color)
 
     print(colors[-1])
@@ -272,9 +256,6 @@ def create_semantic_3D_map(segmented_color_image, depth_image, fx: float, fy: fl
         print(f"points len: {len(points)}")
         print(f"colors len: {len(colors)}")
 
-
-
-    # Tworzenie chmury punktów Open3D
     point_cloud = o3d.geometry.PointCloud()
     point_cloud.points = o3d.utility.Vector3dVector(np.array(points, dtype=np.float64))
     point_cloud.colors = o3d.utility.Vector3dVector(np.array(colors, dtype=np.float64))
@@ -286,8 +267,6 @@ def create_semantic_3D_map(segmented_color_image, depth_image, fx: float, fy: fl
 
     return point_cloud
     
-
-
 def segment_knn(photo, centroids_number: int):
     '''
         Function takes a photo and returns segmented photo using knn algorythm.
@@ -352,13 +331,10 @@ def segment_sobel(photo, kernel_size=3, gray=True):
     return segmented_image
 
 def segment_region_growing(image, seed_point: list, threshold=10):
-    # Inicjalizacja rozmiarów obrazu i tworzenie macierzy oznaczającej przynależność do regionu
     height, width, channels = image.shape
     segmented_region = np.zeros((height, width), np.bool_)
 
-    # Lista pikseli do sprawdzenia, zaczynamy od punktu startowego
     pixels_to_check = [seed_point]
-    # Wartość intensywności pikseli startowego dla wszystkich kanałów
     seed_value = image[seed_point[0], seed_point[1], :]
 
     while len(pixels_to_check) > 0:
@@ -366,16 +342,12 @@ def segment_region_growing(image, seed_point: list, threshold=10):
         current_pixel = pixels_to_check.pop(0)
         x, y = current_pixel[0], current_pixel[1]
 
-        # Jeśli już odwiedzony, kontynuujemy
         if segmented_region[x, y]:
             continue
 
-        # Sprawdzamy, czy obecny piksel spełnia kryterium dla każdego kanału RGB
         if np.all(np.abs(image[x, y, :] - seed_value) <= threshold):
-            # Jeśli tak, dodajemy do regionu
             segmented_region[x, y] = True
 
-            # Sprawdzamy sąsiednie piksele w czterech kierunkach
             if x > 0 and not segmented_region[x - 1, y]:
                 pixels_to_check.append((x - 1, y))
             if x < height - 1 and not segmented_region[x + 1, y]:
@@ -389,37 +361,28 @@ def segment_region_growing(image, seed_point: list, threshold=10):
 
 def segment_watershed(image): 
 
-    # Załóżmy, że na wejściu jest obraz RGB, więc konwersja do skali szarości
     gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
 
-    # Redukcja szumów za pomocą rozmycia Gaussa
     blurred = cv2.GaussianBlur(gray, (5, 5), 0)
 
-    # Wykonanie progowania Otsu
     _, binary = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
 
-    # Utworzenie obrazu z markerami za pomocą operacji morfologicznych
     kernel = np.ones((3, 3), np.uint8)
     sure_bg = cv2.dilate(binary, kernel, iterations=3)
     
-    # Użycie operacji odległościowej, aby znaleźć pewne obszary tła
     dist_transform = cv2.distanceTransform(binary, cv2.DIST_L2, 5)
     _, sure_fg = cv2.threshold(dist_transform, 0.7 * dist_transform.max(), 255, 0)
 
-    # Znalezienie niepewnych obszarów (obszarów brzegowych)
     sure_fg = np.uint8(sure_fg)
     unknown = cv2.subtract(sure_bg, sure_fg)
 
-    # Oznaczenie markerów dla Watershed
     _, markers = cv2.connectedComponents(sure_fg)
     markers = markers + 1
     markers[unknown == 255] = 0
 
-    # Zastosowanie algorytmu Watershed
     cv2.watershed(image, markers)
-    image[markers == -1] = [0, 0, 255]  # Oznaczenie konturów na czerwono
+    image[markers == -1] = [0, 0, 255]
 
-    # Zwrócenie wyniku
     return image
 
 def use_MiDaS(image, model_type = "MiDaS_small"): #DONE
@@ -454,7 +417,6 @@ def use_MiDaS(image, model_type = "MiDaS_small"): #DONE
     return prediction.cpu().numpy()
 
 def use_EVP(image): #TODO: do naprawy XDD
-    # Use a pipeline as a high-level helper
 
     depth_estimation = pipeline("feature-extraction", model="MykolaL/evp_depth", trust_remote_code=True)
 
@@ -466,8 +428,6 @@ def use_ResNet50(image, add_legend = False): #DONE
 
     segmentation = pipeline("image-segmentation", model="facebook/detr-resnet-50-panoptic")
     results = segmentation(image)
-    #print(results)
-    #_check_results_pipeline(results)
 
     colors = generate_color_palette(len(results))
 
@@ -642,13 +602,10 @@ def _add_legend_next_to_segmented_imega(segmented_image, labels: list, colors: l
     legend_width = 250  # Fixed width for the legend area
     legend_image = np.ones((image.shape[0], legend_width, 3), dtype=np.uint8) * 255
 
-    # Calculate the height of each label box
     label_height = image.shape[0] // len(labels)
 
-    # Paste the legend about semantic labels
     for i, label in enumerate(labels): x_position = 10; y_position = (i % (len(labels))) * label_height + 50*font_scale; cv2.putText(legend_image, label, (x_position, y_position), font, font_scale, colors[i], font_thickness, cv2.LINE_AA)
 
-    # Concatenate the original image with the legend image
     masked_image_with_legend = np.hstack((segmented_image, legend_image))
 
     return masked_image_with_legend
