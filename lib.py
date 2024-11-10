@@ -4,16 +4,10 @@ import numpy as np
 import open3d as o3d
 from PIL import Image
 import pyrealsense2 as rs
-import matplotlib.pyplot as plt
-#import tensorflow_hub as tf_hub
-#from transformers import AutoProcessor
-import torchvision.transforms as transforms
 from transformers import BeitForSemanticSegmentation
-from transformers import pipeline, AutoModel, AutoImageProcessor
-from transformers import OneFormerProcessor, OneFormerForUniversalSegmentation
-from transformers import SegformerImageProcessor, SegformerForSemanticSegmentation
+from transformers import pipeline, AutoImageProcessor
 
-def generate_color_palette(n):
+def generate_color_palette(n: int):
     '''
         Function generates a color palette with n colors.
     '''
@@ -22,8 +16,35 @@ def generate_color_palette(n):
         palette.append((np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0, 255)))
     return palette
 
+def check_if_realsense_is_present(print_logs = False):
+    '''
+        Function checks if RealSense camera is present.
+    '''
+    try:
+        pipeline = rs.pipeline()
+        config = rs.config()
+        pipeline_wrapper = rs.pipeline_wrapper(pipeline)
+        pipeline_profile = config.resolve(pipeline_wrapper)
+        device = pipeline_profile.get_device()
+        if print_logs:print(device.sensors)
 
-def get_rgb_and_depth_image(print_logs = False):
+        found_rgb = False
+        for s in device.sensors:
+            if s.get_info(rs.camera_info.name) == 'RGB Camera':
+                found_rgb = True
+                if print_logs: print("Camera found")
+                break
+        if not found_rgb:
+            print("No RGB camera found")
+            return False
+    
+    except Exception as e:
+        if print_logs: print(e)
+        return False
+
+
+
+def get_rgb_and_depth_image_from_realSense(print_logs = False):
 
     '''
         Functions is looking for RealSense camera.
@@ -98,7 +119,7 @@ def get_rgb_and_depth_image(print_logs = False):
         return None, None, None
     
 
-def get_point_cloud() -> o3d.geometry.PointCloud:
+def get_point_cloud_from_realsense() -> o3d.geometry.PointCloud:
     '''
         Function is looking for RealSense camera and returns point cloud.
         If camera is not found, function returns None
