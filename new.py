@@ -6,22 +6,24 @@ import matplotlib.pyplot as plt
 # import open3d as o3d
 
 
-color_image, depth_image, camera_params= lib.get_rgb_and_depth_image(print_logs=True)
+print("## START ##")
+#print(lib.check_if_realsense_is_present(print_logs=False))
 
-#depth_from_model = lib.use_MiDaS(color_image)
+#color_image, depth_image, camera_params= lib.get_rgb_and_depth_image(print_logs=True)
+
 # points_cloud = lib.get_point_cloud()
 
-plt.imsave("images/color_image.png", color_image)
-plt.imsave("images/depth_image.png", depth_image)
+#plt.imsave("images/color_image.png", color_image)
+#plt.imsave("images/depth_image.png", depth_image)
 #plt.imsave("images/depth_from_model.png", depth_from_model)
 #print(camera_params)
 
 # print(camera_params.fx, camera_params.fy)
-print("segmenting image")
-color_image, _, _ = lib.use_OneFormer(color_image)
-plt.imsave("images/seg_image.png", color_image)
+#print("segmenting image")
+#color_image, _, _ = lib.use_OneFormer(color_image)
+#plt.imsave("images/seg_image.png", color_image)
 
-point_cloud = lib.create_semantic_3D_map(color_image, depth_image, fx = camera_params.fx, fy = camera_params.fy, print_logs=True, save_ply=True)
+#point_cloud = lib.create_semantic_3D_map(color_image, depth_image, fx = camera_params.fx, fy = camera_params.fy, print_logs=True, save_ply=True)
 
 
 
@@ -37,7 +39,7 @@ point_cloud = lib.create_semantic_3D_map(color_image, depth_image, fx = camera_p
 #seed_list = [(100, 100), (200, 200), (300, 300), (400, 400)]
 
 #image = cv2.imread("./image.jpg")
-#image = Image.open("./image.jpg")
+image = Image.open("./image3.jpg")
 
 
 # SegFormer
@@ -45,12 +47,16 @@ point_cloud = lib.create_semantic_3D_map(color_image, depth_image, fx = camera_p
 #plt.imsave("./seg_image.jpg", semantic_image)
 
 #OneFormer
-# semantic_image, _,_ = lib.use_OneFormer(image)
+# semantic_image, _,_ = lib.use_OneFormer(image)use_mask2former
+
 # plt.imsave("./seg_image.jpg", semantic_image)
 
 #MiDaS
 # depth_image = lib.use_MiDaS(image)
-# plt.imsave("./depth_image.jpg", depth_image)
+# #plt.imsave("./depth_image.jpg", depth_image)
+# plt.imshow(depth_image)
+# plt.show()
+
 
 #EVP
 #lib.use_EVP(image)
@@ -73,6 +79,36 @@ point_cloud = lib.create_semantic_3D_map(color_image, depth_image, fx = camera_p
 # plt.imsave("./seg_image.jpg", semantic_image)
 
 #print(lib.get_realsense_camera_config())
+# masked_image_with_legend, panoptic_labels, panoptic_masks = lib.use_ResNet50(image, add_legend=True)
+
+# # print(panoptic_labels)
+# # plt.imsave("./seg_image.jpg", masked_image_with_legend)
+# plt.imshow(masked_image_with_legend)
+# plt.show()
+#plt.imsave("./panoptic_labels.jpg", panoptic_labels)
+#plt.imsave("./panoptic_masks.jpg", panoptic_masks)
+
+# depth, depth_result = lib.EVP(image)
+# plt.imshow(depth)
+# plt.show()
+
+# masked_image_large, results, labels = lib.use_BEiT_semantic(image, add_legend=True, model = 'large')
+#masked_image_base, results, labels = lib.use_OneFormer(image, add_legend=True, dataset='cityscapes', model='large')#, model = 'small')
+#masked_image_base,_,_ = lib.use_mask2former(image, add_legend=True)
+masked_image_base,_,_ = lib.use_maskformer(image, add_legend=False, model = 'large')
+plt.imshow(masked_image_base)
+plt.imsave("./seg_image.jpg", masked_image_base)
+
+# fig, axs = plt.subplots(1, 2, figsize=(12, 6))
+
+# axs[0].imshow(masked_image_large)
+# axs[0].set_title('Masked Image Large')
+
+# axs[1].imshow(masked_image_base)
+# axs[1].set_title('Masked Image Base')
+
+plt.show()
+
 
 
 print("## DONE ##")

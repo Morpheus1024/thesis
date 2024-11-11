@@ -7,14 +7,7 @@ import pyrealsense2 as rs
 from transformers import BeitForSemanticSegmentation
 from transformers import pipeline, AutoImageProcessor
 
-def generate_color_palette(n: int):
-    '''
-        Function generates a color palette with n colors.
-    '''
-    palette = []
-    for i in range(n):
-        palette.append((np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0, 255)))
-    return palette
+#MARK: Funckaje REALSENSE
 
 def check_if_realsense_is_present(print_logs = False):
     '''
@@ -42,9 +35,7 @@ def check_if_realsense_is_present(print_logs = False):
         if print_logs: print(e)
         return False
 
-
-
-def get_rgb_and_depth_image_from_realSense(print_logs = False):
+def get_rgb_and_depth_image_from_realsense(print_logs = False, height = 480, width = 640):
 
     '''
         Functions is looking for RealSense camera.
@@ -74,8 +65,8 @@ def get_rgb_and_depth_image_from_realSense(print_logs = False):
             print("No RGB camera found")
             return None, None
         
-        config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
-        config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
+        config.enable_stream(rs.stream.depth, width, height, rs.format.z16, 30)
+        config.enable_stream(rs.stream.color, width, height, rs.format.bgr8, 30)
         pipeline.start(config)
         profile = pipeline.get_active_profile()
         camera_params = profile.get_stream(rs.stream.depth).as_video_stream_profile().get_intrinsics()
@@ -118,8 +109,7 @@ def get_rgb_and_depth_image_from_realSense(print_logs = False):
         print(e)
         return None, None, None
     
-
-def get_point_cloud_from_realsense() -> o3d.geometry.PointCloud:
+def get_point_cloud_from_realsense() -> rs.pointcloud:
     '''
         Function is looking for RealSense camera and returns point cloud.
         If camera is not found, function returns None
@@ -127,7 +117,6 @@ def get_point_cloud_from_realsense() -> o3d.geometry.PointCloud:
 
     try:
         pc = rs.pointcloud()
-        points = rs.points()
     
         pipeline = rs.pipeline()
         config = rs.config()
@@ -178,13 +167,10 @@ def get_point_cloud_from_realsense() -> o3d.geometry.PointCloud:
         print(e)
         return None
     
-    
-def save_ply_file_from_realsense(filename: str):
+def save_ply_file_from_realsense(filename: str) -> None:
     '''
         Function is looking for RealSense camera and saves point cloud to .ply file.
     '''
-    pc = rs.pointcloud()
-    points = rs.points()
     pipeline = rs.pipeline()
     config = rs.config()
     config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
@@ -236,7 +222,7 @@ def get_realsense_camera_config() -> rs.intrinsics:
     
     return depth_intrinsics
     
-def create_semantic_3D_map(segmented_color_image, depth_image, fx: float, fy: float, z_scale = 0.001, print_logs = False, save_ply = False): #MARK: 3D semantic map
+def create_semantic_3D_map(segmented_color_image, depth_image, fx: float, fy: float, z_scale = 0.001, print_logs = False, save_ply = False) -> o3d.geometry.PointCloud: #MARK: 3D semantic map
     """
     Create a 3D semantic map from the segmented color image and the depth image.
 
@@ -287,7 +273,9 @@ def create_semantic_3D_map(segmented_color_image, depth_image, fx: float, fy: fl
         if print_logs: print("Ply file saved")
 
     return point_cloud
-    
+
+#MARK: Funkcje segmentacji
+
 def segment_knn(photo, centroids_number: int):
     '''
         Function takes a photo and returns segmented photo using knn algorythm.
@@ -406,11 +394,20 @@ def segment_watershed(image):
 
     return image
 
-def use_MiDaS(image, model_type = "MiDaS_small"): #DONE
-    #model_type = "DPT_ Large"
-    # model_type = "DPT_Hybrid"
-    model_type = "MiDaS_small"
+#MARK: Funkcje modeli głebi
 
+def use_MiDaS(image, model = "MiDaS_small"): #DONE
+    '''
+        https://pytorch.org/hub/intelisl_midas_v2/
+
+        :param image: image to estimate depth
+        :param model: model to use (MiDaS_small, DPT_Large, DPT_Hybrid)
+    '''
+
+    if model not in ["MiDaS_small", "DPT_Large", "DPT_Hybrid"]:
+        raise ValueError("Model must be 'MiDaS_small', 'DPT_Large' or 'DPT_Hybrid'")
+
+    model_type = model
     midas = torch.hub.load("intel-isl/MiDaS", model_type)
 
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
@@ -437,196 +434,383 @@ def use_MiDaS(image, model_type = "MiDaS_small"): #DONE
 
     return prediction.cpu().numpy()
 
-def use_EVP(image): #TODO: do naprawy XDD
+def use_MiDaS_Hybrid(image):
+    """
+    Estimate the depth of an image using the MiDaS Hybrid model.
+    This function uses the Intel DPT-Hybrid-MiDaS model to perform depth estimation on the given image.
+    Args:
+        image: The input image for which depth estimation is to be performed. The image should be in a format compatible with the pipeline.
+    Returns:
+        tuple: A tuple containing:
+            - depth: The estimated depth map of the input image.
+            - results: The full results dictionary from the depth estimation pipeline.
+    """
+
+    depth_estimation = pipeline("depth-estimation", model="Intel/dpt-hybrid-midas")
+
+    results = depth_estimation(image)
+
+    return results['depth'], results
+
+def use_EVP(image): #FIXME:  nie działa???
+    """
+    Estimate the depth of an image using the EVP depth estimation model.
+    Parameters:
+    image (PIL.Image): The input image for depth estimation.
+    Returns:
+    tuple: A tuple containing:
+        - depth (numpy.ndarray): The estimated depth map of the input image.
+        - results (dict): The full results dictionary from the depth estimation pipeline.
+    """
 
     depth_estimation = pipeline("feature-extraction", model="MykolaL/evp_depth", trust_remote_code=True)
 
     results = depth_estimation(image)
-    print(results)
 
-def use_ResNet50(image, add_legend = False): #DONE
-    image = _cv2_to_pil(image)
+    return results['depth'], results
 
-    segmentation = pipeline("image-segmentation", model="facebook/detr-resnet-50-panoptic")
-    results = segmentation(image)
+def use_BEiT_depth(image):
+    """
+    Estimate the depth of an image using the BEiT model.
+    This function uses the "depth-estimation" pipeline from the Hugging Face 
+    Transformers library with the "Intel/dpt-beit-large-512" model to estimate 
+    the depth of the given image.
+    Args:
+        image (PIL.Image or numpy.ndarray): The input image for which depth 
+        estimation is to be performed.
+    Returns:
+        tuple: A tuple containing:
+            - depth (numpy.ndarray): The estimated depth map of the input image.
+            - results (dict): The full results from the depth estimation pipeline.
+    """
 
-    colors = generate_color_palette(len(results))
 
-    semantic_masks = []
-    semantic_labels = []
 
-    for i in range(len(results)):
-        semantic_masks.append(results[i]['mask'])
-        semantic_labels.append(results[i]['label'])
+    depth_estimation = pipeline("depth-estimation", model="Intel/dpt-beit-large-512")
 
-    masked_image = np.zeros_like(image)
-    for i in range(len(results)):
-        mask = np.array(semantic_masks[i])
-        for j in range(3):
-            masked_image[:,:,j] = masked_image[:,:,j] + mask * colors[i][j]
-    
-    if add_legend: masked_image = _add_legend_next_to_segmented_imega(masked_image, semantic_labels, colors)
+    results = depth_estimation(image)
 
-    return masked_image, semantic_labels, semantic_masks
-    
+    return results['depth'], results
 
-def use_DeepLabV3(image, add_legend = False): #DONE
+#MARK: Funkcje segmentacji semantycznej obrazu
 
-    segmentation = pipeline("image-segmentation", model=f"apple/deeplabv3-mobilevit-small")
-    results = segmentation(image)
+def use_DeepLabV3(image, add_legend = False, model = 'apple'): #DONE
 
-    colors = generate_color_palette(len(results))
+    if model not in ['apple', 'apple-xx', 'google']:
+        raise ValueError("Model must be 'apple', 'apple-xx' or 'google'")
 
-    semantic_masks = []
-    semantic_labels = []
+    if model == 'apple': model="apple/deeplabv3-mobilevit-small"
+    elif model == 'apple-xx': model="apple/deeplabv3-mobilevit-xx-small"
+    elif model == 'google': model="google/deeplabv3_mobilenet_v2_1.0_513"
 
-    for i in range(len(results)):
-        semantic_masks.append(results[i]['mask'])
-        semantic_labels.append(results[i]['label'])
+    semantic_segmentation = pipeline("image-segmentation", model="model")   
 
-    masked_image = np.zeros_like(image)
-    for i in range(len(results)):
-        mask = np.array(semantic_masks[i])
-        for j in range(3):
-            masked_image[:,:,j] = masked_image[:,:,j] + mask * colors[i][j]
-    
-    if add_legend: masked_image = _add_legend_next_to_segmented_imega(masked_image, semantic_labels, colors)
-
-    return masked_image, semantic_labels, semantic_masks
-
-def use_DeepLabV3_xx(image, add_legend = False): #DONE
-    segmentation = pipeline("image-segmentation", model="apple/deeplabv3-mobilevit-xx-small")
-    results = segmentation(image)
-
-    colors = generate_color_palette(len(results))
-
-    semantic_masks = []
-    semantic_labels = []
-
-    for i in range(len(results)):
-        semantic_masks.append(results[i]['mask'])
-        semantic_labels.append(results[i]['label'])
-
-    masked_image = np.zeros_like(image)
-    for i in range(len(results)):
-        mask = np.array(semantic_masks[i])
-        for j in range(3):
-            masked_image[:,:,j] = masked_image[:,:,j] + mask * colors[i][j]
-    
-    if add_legend: masked_image = _add_legend_next_to_segmented_imega(masked_image, semantic_labels, colors)
-
-    return masked_image, semantic_labels, semantic_masks
-
-def use_DeepLabV3_by_Google(image, add_legend = False): #DONE
-    segmentation = pipeline("image-segmentation", model="google/deeplabv3_mobilenet_v2_1.0_513")
-    results = segmentation(image)
-
-    colors = generate_color_palette(len(results))
-
-    semantic_masks = []
-    semantic_labels = []
-
-    for i in range(len(results)):
-        semantic_masks.append(results[i]['mask'])
-        semantic_labels.append(results[i]['label'])
-
-    masked_image = np.zeros_like(image)
-    for i in range(len(results)):
-        mask = np.array(semantic_masks[i])
-        for j in range(3):
-            masked_image[:,:,j] = masked_image[:,:,j] + mask * colors[i][j]
-    
-    if add_legend: masked_image = _add_legend_next_to_segmented_imega(masked_image, semantic_labels, colors)
-
-    return masked_image, semantic_labels, semantic_masks
-
-def use_OneFormer(image, task = 'semantic', model_size = 'large', add_legend = False): #DONE
-    '''
-        Function takes an image and returns segmented image using OneFormer model.
-        :param image: image to segment
-        :param task: 'semantic', 'instance' or 'panoptic'
-    '''
-    # https://huggingface.co/docs/transformers/main/en/model_doc/oneformer#transformers.OneFormerForUniversalSegmentation
-
-    image = _cv2_to_pil(image)
-
-    segmentation = pipeline("image-segmentation", model=f"shi-labs/oneformer_ade20k_swin_{model_size}")
-    results = segmentation(image)
-
-    colors = generate_color_palette(len(results))
-
-    semantic_masks = []
-    semantic_labels = []
-    for i in range(len(results)):
-        semantic_masks.append(results[i]['mask'])
-        semantic_labels.append(results[i]['label'])
-
-    masked_image = np.zeros_like(image)
-    for i in range(len(results)):
-        mask = np.array(semantic_masks[i])
-        for j in range(3):
-            masked_image[:,:,j] = masked_image[:,:,j] + mask * colors[i][j]
-
-    if add_legend: masked_image = _add_legend_next_to_segmented_imega(masked_image, semantic_labels, colors)
-
-    return masked_image, semantic_labels, semantic_masks
-
-def use_BEiT(image):
-    #https://huggingface.co/docs/transformers/main/en/model_doc/beit#transformers.BeitForImageClassification
-
-    '''
-    '''
-
-    image_processor = AutoImageProcessor.from_pretrained("microsoft/beit-base-finetuned-ade-640-640")
-    model = BeitForSemanticSegmentation.from_pretrained("microsoft/beit-base-finetuned-ade-640-640")
-
-    input = image_processor(images=image, return_tensors="pt")
-    output = model(**input)
-
-    logits = output.logits
-    predicted_segmentation = torch.argmax(logits, dim=1).squeeze().cpu().numpy()
-
-    return predicted_segmentation, logits
-
-def use_SegFormer(image, add_legend = False): #DONE
-    #https://huggingface.co/nvidia/segformer-b0-finetuned-ade-512-512
-
-    semantic_segmentation = pipeline("image-segmentation", model="nvidia/segformer-b0-finetuned-ade-512-512")#, device=0)
     results = semantic_segmentation(image)
     
     colors = generate_color_palette(len(results))
 
-    semantic_masks = []
-    semantic_labels = []
     for i in range(len(results)):
-        semantic_masks.append(results[i]['mask'])
-        semantic_labels.append(results[i]['label'])
+        results[i]['color'] = colors[i]
+    
+    masked_image = np.zeros_like(image)
+
+    for result in results:
+        mask = np.array(result['mask'])
+        colored_mask = np.zeros_like(image)
+        color = np.array(result['color'])
+
+        for j in range(3):
+            colored_mask[:,:,j] = mask * color[j]
+        masked_image += colored_mask
+    
+    if add_legend:
+        labels = [result['label'] for result in results]
+        colors = [result['color'] for result in results]
+        masked_image = _add_legend_next_to_segmented_imega(masked_image, labels, colors)
+
+    return masked_image, [result['label'] for result in results], [result['mask'] for result in results]
+    
+def use_OneFormer(image, task = 'semantic', model = 'large', dataset = 'ade20k', add_legend = False): #DONE
+    '''
+        Function takes an image and returns segmented image using OneFormer model.
+        :param image: image to segment
+        :param dataset: dataset to use (ade20k, coco, cityscapes)
+        :param model: model to use (large, tiny - only for ade20k)
+    '''
+
+    if model not in ['large', 'tiny']:
+        raise ValueError("Model must be 'large' or 'tiny'")
+        return None, None, None
+
+    if dataset not in ['ade20k', 'coco', 'cityscapes']:
+        raise ValueError("Dataset must be 'ade20k', 'cityscapes' or 'coco'")
+
+    if model == 'tiny' and dataset != "ade20k":
+        raise ValueError("Tiny model is available only for ADE20K dataset")
+
+    model = f"shi-labs/oneformer_{dataset}_swin_{model}"
+
+    semantic_segmentation = pipeline("image-segmentation", model="shi-labs/oneformer_ade20k_swin_large")   
+
+    results = semantic_segmentation(image)
+    
+    colors = generate_color_palette(len(results))
+
+    for i in range(len(results)):
+        results[i]['color'] = colors[i]
+    
+    masked_image = np.zeros_like(image)
+
+    for result in results:
+        mask = np.array(result['mask'])
+        colored_mask = np.zeros_like(image)
+        color = np.array(result['color'])
+
+        for j in range(3):
+            colored_mask[:,:,j] = mask * color[j]
+        masked_image += colored_mask
+    
+    if add_legend:
+        labels = [result['label'] for result in results]
+        colors = [result['color'] for result in results]
+        masked_image = _add_legend_next_to_segmented_imega(masked_image, labels, colors)
+
+    return masked_image, [result['label'] for result in results], [result['mask'] for result in results]
+       
+def use_BEiT_semantic(image, add_legend = False, model = 'base'): #FIXME
+
+    '''
+    [link](https://huggingface.co/docs/transformers/main/en/model_doc/beit#transformers.BeitForImageClassification)
+    
+    model = 'base'
+
+    model = 'large' - realy large, over 2.2GB of size
+    '''
+    if model not in ['base', 'large']:
+        raise ValueError("Model must be 'base' or 'large'")
+        return None, None, None
+    
+    model = f"microsoft/beit-{model}-finetuned-ade-640-640" 
+    semantic_segmentation = pipeline("image-segmentation", model=model)
+
+    results = semantic_segmentation(image)
+    
+    colors = generate_color_palette(len(results))
+
+    for i in range(len(results)):
+        results[i]['color'] = colors[i]
+    
+    masked_image = np.zeros_like(image)
+
+    for result in results:
+        mask = np.array(result['mask'])
+        colored_mask = np.zeros_like(image)
+        color = np.array(result['color'])
+
+        for j in range(3):
+            colored_mask[:,:,j] = mask * color[j]
+        masked_image += colored_mask
+    
+    if add_legend:
+        labels = [result['label'] for result in results]
+        colors = [result['color'] for result in results]
+        masked_image = _add_legend_next_to_segmented_imega(masked_image, labels, colors)
+
+    return masked_image, [result['label'] for result in results], [result['mask'] for result in results]
+    
+def use_SegFormer(image, add_legend = False, dataset = 'ade'): #DONE
+    #https://huggingface.co/nvidia/segformer-b0-finetuned-ade-512-512
+
+    if dataset not in ['ade', 'cityscapes']:
+        raise ValueError("Dataset must be 'ade' or 'cityscapes'")
+        return None, None, None
+
+    if dataset == 'ade': model = "nvidia/segformer-b0-finetuned-ade-512-512"
+    elif dataset == 'cityscapes': model = "nvidia/segformer-b1-finetuned-cityscapes-1024-1024"
+    
+    semantic_segmentation = pipeline("image-segmentation",  model=model)   
+
+    results = semantic_segmentation(image)
+    
+    colors = generate_color_palette(len(results))
+
+    for i in range(len(results)):
+        results[i]['color'] = colors[i]
+    
+    masked_image = np.zeros_like(image)
+
+    for result in results:
+        mask = np.array(result['mask'])
+        colored_mask = np.zeros_like(image)
+        color = np.array(result['color'])
+
+        for j in range(3):
+            colored_mask[:,:,j] = mask * color[j]
+        masked_image += colored_mask
+    
+    if add_legend:
+        labels = [result['label'] for result in results]
+        colors = [result['color'] for result in results]
+        masked_image = _add_legend_next_to_segmented_imega(masked_image, labels, colors)
+
+    return masked_image, [result['label'] for result in results], [result['mask'] for result in results]
+
+def use_maskformer(image, add_legend = False, model = 'base', dataset = 'coco'):
+
+    """
+    Apply MaskFormer model for semantic segmentation on the given image.
+    Parameters:
+    image (numpy.ndarray): The input image on which segmentation is to be performed.
+    add_legend (bool, optional): If True, adds a legend next to the segmented image. Default is False.
+    model (str, optional): The model variant to use. Must be one of 'tiny', 'small', 'base', or 'large'. Default is 'base'.
+    dataset (str, optional): The dataset on which the model was trained. Must be 'coco' or 'ade'. Default is 'coco'.
+    Returns:
+    tuple: A tuple containing:
+        - masked_image (numpy.ndarray): The image with applied segmentation masks.
+        - labels (list of str): List of labels for each segmented region.
+        - masks (list of numpy.ndarray): List of masks for each segmented region.
+    Raises:
+    ValueError: If the model is not one of 'tiny', 'small', 'base', or 'large'.
+    ValueError: If the dataset is not 'coco' or 'ade'.
+    """
+
+
+    if model not in ['tiny', 'small', 'base', 'large']:
+        raise ValueError("Model must be 'tiny', 'small', 'base' or 'large'")
+    
+    if dataset not in ['coco', 'ade']:
+        raise ValueError("Dataset must be 'coco' or 'ade'")
+
+    model = f"facebook/maskformer-swin-{model}-{dataset}"
+
+    semantic_segmentation = pipeline("image-segmentation", model=model)   
+
+    results = semantic_segmentation(image)
+    
+    colors = generate_color_palette(len(results))
+
+    for i in range(len(results)):
+        results[i]['color'] = colors[i]
+    
+    masked_image = np.zeros_like(image)
+
+    for result in results:
+        mask = np.array(result['mask'])
+        colored_mask = np.zeros_like(image)
+        color = np.array(result['color'])
+
+        for j in range(3):
+            colored_mask[:,:,j] = mask * color[j]
+        masked_image += colored_mask
+    
+    if add_legend:
+        labels = [result['label'] for result in results]
+        colors = [result['color'] for result in results]
+        masked_image = _add_legend_next_to_segmented_imega(masked_image, labels, colors)
+
+    return masked_image, [result['label'] for result in results], [result['mask'] for result in results]
+
+#MARK: Funkcje segmentacji panopticon
+def use_mask2former(image, add_legend=False, model = 'base', dataset = 'coco'): #DONE
+
+    if model not in ['base', 'large']:
+        raise ValueError("Model must be 'base' or 'large'")
+        return None, None, None
+
+    model = f"facebook/mask2former-swin-{model}-coco-panoptic"
+
+    paoptic_segmentation = pipeline("image-segmentation", model=model)   
+
+    results = paoptic_segmentation(image)
+    
+    colors = generate_color_palette(len(results))
+
+    for i in range(len(results)):
+        results[i]['color'] = colors[i]
+    
+    masked_image = np.zeros_like(image)
+
+    for result in results:
+        mask = np.array(result['mask'])
+        colored_mask = np.zeros_like(image)
+        color = np.array(result['color'])
+
+        for j in range(3):
+            colored_mask[:,:,j] = mask * color[j]
+        masked_image += colored_mask
+    
+    if add_legend:
+        labels = [result['label'] for result in results]
+        colors = [result['color'] for result in results]
+        masked_image = _add_legend_next_to_segmented_imega(masked_image, labels, colors)
+
+    return masked_image, [result['label'] for result in results], [result['mask'] for result in results]
+        
+def use_ResNet_panoptic(image, add_legend = False, model = '50'):
+
+    if model not in ['50', '101']:
+        raise ValueError("Model must be '50' or '101'")
+    
+    paoptic_segmentation = pipeline("image-segmentation", model=f"facebook/detr-resnet-{model}-panoptic")   
+
+    results = paoptic_segmentation(image)
+    
+    colors = generate_color_palette(len(results))
+
+    for i in range(len(results)):
+        results[i]['color'] = colors[i]
+    
 
     masked_image = np.zeros_like(image)
-    for i in range(len(results)):
-        mask = np.array(semantic_masks[i])
+
+    for result in results:
+        #color = None
+        mask = np.array(result['mask'])
+        colored_mask = np.zeros_like(image)
+        color = np.array(result['color'])
+
         for j in range(3):
-            masked_image[:,:,j] = masked_image[:,:,j] + mask * colors[i][j]
-
-    if add_legend: masked_image_with_legend = _add_legend_next_to_segmented_imega(masked_image, semantic_labels, colors)
-
-    return masked_image_with_legend, semantic_labels, semantic_masks
+            colored_mask[:,:,j] = mask * color[j]
+        masked_image += colored_mask
     
+    if add_legend:
+        labels = [result['label'] for result in results]
+        colors = [result['color'] for result in results]
+        masked_image = _add_legend_next_to_segmented_imega(masked_image, labels, colors)
+
+    return masked_image, [result['label'] for result in results], [result['mask'] for result in results]
+         
+#MARK: Funkcje pomocnicze
+
 def _add_legend_next_to_segmented_imega(segmented_image, labels: list, colors: list):
-
-
     font = cv2.FONT_HERSHEY_SIMPLEX
-    font_scale = 2
+    font_scale = 1
     font_thickness = 2
 
+    # Tworzenie obrazu legendy z białym tłem
     image = np.array(segmented_image)
-    legend_width = 250  # Fixed width for the legend area
+    legend_width = 250  # Szerokość legendy
     legend_image = np.ones((image.shape[0], legend_width, 3), dtype=np.uint8) * 255
 
     label_height = image.shape[0] // len(labels)
 
-    for i, label in enumerate(labels): x_position = 10; y_position = (i % (len(labels))) * label_height + 50*font_scale; cv2.putText(legend_image, label, (x_position, y_position), font, font_scale, colors[i], font_thickness, cv2.LINE_AA)
+    # Dodawanie każdego elementu legendy
+    for i, label in enumerate(labels):
+        x_position = 10
+        y_position = (i % len(labels)) * label_height + 40
+        color_box_start = (x_position, y_position - 20)
+        color_box_end = (x_position + 20, y_position)
 
+        color = colors[i]
+        color = (255 - color[0], 255 - color[1], 255 - color[2])
+
+        # Rysowanie prostokąta z kolorem odpowiadającym etykiecie
+        cv2.rectangle(legend_image, color_box_start, color_box_end, color, -1)
+
+        # Dodawanie nazwy etykiety obok prostokąta
+        cv2.putText(legend_image, label, (x_position + 30, y_position), font, font_scale, (0, 0, 0), font_thickness, cv2.LINE_AA)
+
+    # Łączenie segmentowanego obrazu z legendą
     masked_image_with_legend = np.hstack((segmented_image, legend_image))
 
     return masked_image_with_legend
@@ -641,3 +825,13 @@ def _check_results_pipeline(results):
 
 def _cv2_to_pil(image):
     return Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+
+def generate_color_palette(n: int):
+
+    '''
+        Function generates a color palette with n colors.
+    '''
+    palette = []
+    for i in range(n):
+        palette.append((np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0, 255)))
+    return palette
