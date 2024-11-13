@@ -3,13 +3,16 @@ import lib
 import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
-# import open3d as o3d
+import open3d as o3d
 
 
 print("## START ##")
 #print(lib.check_if_realsense_is_present(print_logs=False))
 
-#color_image, depth_image, camera_params= lib.get_rgb_and_depth_image(print_logs=True)
+# color_image, depth_image, camera_params= lib.get_rgb_and_depth_image_from_realsense(print_logs=True)
+
+# plt.imsave("color.png", color_image)
+# plt.imsave("depth.png", depth_image)
 
 # points_cloud = lib.get_point_cloud()
 
@@ -39,7 +42,15 @@ print("## START ##")
 #seed_list = [(100, 100), (200, 200), (300, 300), (400, 400)]
 
 #image = cv2.imread("./image.jpg")
-image = Image.open("./image3.jpg")
+image = cv2.imread("./seg_image.png")
+print(image.shape)
+
+depth = cv2.imread("./depth_rs.png")
+depth = cv2.cvtColor(depth, cv2.COLOR_BGR2GRAY)
+print(len(depth.shape))
+depth = -depth
+
+ply = lib.create_semantic_3D_map(image, depth, fx = 385, fy = 385, print_logs=True, save_ply=True)
 
 
 # SegFormer
@@ -92,12 +103,21 @@ image = Image.open("./image3.jpg")
 # plt.imshow(depth)
 # plt.show()
 
-# masked_image_large, results, labels = lib.use_BEiT_semantic(image, add_legend=True, model = 'large')
+# masked_image_large, labels, masks = lib.use_mask2former(image, add_legend=False)
+# print(labels)
+
+# plt.imsave("./seg_image.png", masked_image_large)
 #masked_image_base, results, labels = lib.use_OneFormer(image, add_legend=True, dataset='cityscapes', model='large')#, model = 'small')
 #masked_image_base,_,_ = lib.use_mask2former(image, add_legend=True)
-masked_image_base,_,_ = lib.use_maskformer(image, add_legend=False, model = 'large')
-plt.imshow(masked_image_base)
-plt.imsave("./seg_image.jpg", masked_image_base)
+# masked_image_base,_,_ = lib.use_maskformer(image, add_legend=True, model = 'large')
+#masked_image_base.save("./_image.png")
+# depth_image,_ = lib.use_MiDaS_Hybrid(image )
+#masked_image_base.save("./masked_image.png")
+#plt.imshow(masked_image_base)
+# plt.imsave("./seg_image.jpg", masked_image_base)
+#plt.show()
+
+#segmented_image,_,_ = lib.use_maskformer(image, add_legend=False, model = 'large')
 
 # fig, axs = plt.subplots(1, 2, figsize=(12, 6))
 
@@ -107,7 +127,14 @@ plt.imsave("./seg_image.jpg", masked_image_base)
 # axs[1].imshow(masked_image_base)
 # axs[1].set_title('Masked Image Base')
 
-plt.show()
+# masked_image_base = np.array(masked_image_base)
+# image = np.array(image)
+# image = np.array(image)
+# shape = image.shape
+# cloude_point = lib.create_semantic_3D_map(image,depth_image, fx = int(shape[1]/2), fy = int(shape[0]/2), print_logs=False, save_ply=False)
+
+# o3d.visualization.draw_geometries([cloude_point])
+
 
 
 

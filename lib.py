@@ -98,10 +98,8 @@ def get_rgb_and_depth_image_from_realsense(print_logs = False, height = 480, wid
                 color_image = np.asanyarray(color_frame.get_data())
                 color_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB)
 
-
             break
 
-        #ply = rs.save_to_ply('cloude_points.ply')
         pipeline.stop()
         return color_image, depth_image, camera_params
 
@@ -135,8 +133,8 @@ def get_point_cloud_from_realsense() -> rs.pointcloud:
             print("No RGB camera found")
             return None
         
-        config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
-        config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
+        config.enable_stream(rs.stream.depth, 848, 480, rs.format.z16, 30)
+        config.enable_stream(rs.stream.color, 848, 480, rs.format.bgr8, 30)
         pipeline.start(config)
         colorizer = rs.colorizer()
         align_to = rs.stream.color
@@ -227,16 +225,32 @@ def create_semantic_3D_map(segmented_color_image, depth_image, fx: float, fy: fl
     Create a 3D semantic map from the segmented color image and the depth image.
 
     Parameters:
-    segmented_color_image (numpy.ndarray): Segmented RGB image.
-    depth_image (numpy.ndarray): Depth image corresponding to the segmented RGB image.
+    :param segmented_color_image (numpy.ndarray): Segmented RGB image.
+    :param depth_image (numpy.ndarray): Depth image corresponding to the segmented RGB image.
+    :param fx
+    :param fy
+    :param z_scale
+    :param print_logs: True or False
+    :param save_ply: True or False
 
     Returns:
     open3d.geometry.PointCloud: A 3D point cloud representing the semantic map.
     """
 
+    if isinstance(segmented_color_image,Image.Image):
+        segmented_color_image = np.array(segmented_color_image)
+
+    if isinstance(depth_image,Image.Image):
+        depth_image = np.array(depth_image)
+
+
+
     if segmented_color_image.shape[:2] != depth_image.shape:
         raise ValueError("The segmented color image and the depth image must have the same dimensions.")
 
+    if len(depth_image.shape) ==3 and depth_image.shape[3] !=1:
+        raise ValueError("The depth image must be a single-channel image.")
+    
     points = []
     colors = []
 
@@ -248,16 +262,15 @@ def create_semantic_3D_map(segmented_color_image, depth_image, fx: float, fy: fl
     for v in range(depth_image.shape[0]):
         for u in range(depth_image.shape[1]):
             z = depth_image[v, u] * z_scale  
-            if z == 0:
+            if z < 10:
                 continue  
             x = (u - cx) * z / fx
-            y = (v - cy) * z / fy
+            y =- (v - cy) * z / fy
 
             points.append([x, y, z])
             color = segmented_color_image[v, u, :3] / 255.0  
             colors.append(color)
 
-    print(colors[-1])
     if print_logs: 
         print("Przeanalizowano piksele i naniesiono na chmurę głębi")
         print(f"points len: {len(points)}")
@@ -655,7 +668,7 @@ def use_SegFormer(image, add_legend = False, dataset = 'ade'): #DONE
 
     return masked_image, [result['label'] for result in results], [result['mask'] for result in results]
 
-def use_maskformer(image, add_legend = False, model = 'base', dataset = 'coco'):
+def use_MaskFormer(image, add_legend = False, model = 'base', dataset = 'coco'):
 
     """
     Apply MaskFormer model for semantic segmentation on the given image.
@@ -789,7 +802,7 @@ def _add_legend_next_to_segmented_imega(segmented_image, labels: list, colors: l
 
     # Tworzenie obrazu legendy z białym tłem
     image = np.array(segmented_image)
-    legend_width = 250  # Szerokość legendy
+    legend_width = 400 # Szerokość legendy
     legend_image = np.ones((image.shape[0], legend_width, 3), dtype=np.uint8) * 255
 
     label_height = image.shape[0] // len(labels)
