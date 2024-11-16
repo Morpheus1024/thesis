@@ -51,8 +51,8 @@ def example_0():
 
             images = np.hstack((color_image, depth_colormap))
 
-            cv2.namedWindow('RealSense viewer', cv2.WINDOW_AUTOSIZE)
-            cv2.imshow('RealSense', images)
+            cv2.namedWindow('RealSense', cv2.WINDOW_AUTOSIZE)
+            cv2.imshow('RealSense viewer. Press q to exit', images)
             key = cv2.waitKey(1)
             if key & 0xFF == ord('q') or key == 27:
                 cv2.destroyAllWindows()
