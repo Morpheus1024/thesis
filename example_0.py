@@ -3,7 +3,12 @@ import numpy as np
 import pyrealsense2 as rs
 
 
-def example_2():
+def example_0():
+
+    """
+     Example shows how to interuct with the realsense camera by using pyrealsense2 library.
+     Also it can be used as camera sight viewer.
+    """
 
     pipeline = rs.pipeline()
     config = rs.config()
@@ -58,4 +63,4 @@ def example_2():
         pipeline.stop()
 
 if __name__ == "__main__":
-    example_2()
+    example_0()
