@@ -1,31 +1,19 @@
-
-
+# Example shows how to interuct with the realsense camera.
 
 import lib
 import matplotlib.pyplot as plt
 
-def example_1():
-    """
-    Checks for the presence of a RealSense camera, captures RGB and depth images if present,
-    and displays them using matplotlib.
-    The function performs the following steps:
-    1. Checks if a RealSense camera is connected and logs the result.
-    2. If a RealSense camera is present, captures an RGB image and a depth image.
-    3. Displays the captured images side by side using matplotlib.
-    Returns:
-        None
-    Shows:
-        matplotlib plot: RGB image and depth image side by side.
-    """
-
-
+def example_1(): 
 
     realsense_presence = lib.check_if_realsense_is_present(print_logs= True)
-    print(realsense_presence)
 
     if realsense_presence:
-        color_image, depth_image, realsense_params = lib.get_rgb_and_depth_image_from_realsense()
-        print(realsense_params)
+        print("Realsense camera is present")
+        realsense_config = lib.get_realsense_camera_config()
+        print(realsense_config)
+
+        #get color and depth image
+        color_image, depth_image = lib.get_rgb_and_depth_image_from_realsense()
 
         fig = plt.figure(figsize=(14,7))
 
@@ -35,6 +23,18 @@ def example_1():
         plt.imshow(depth_image)
 
         plt.show()
+
+        #get depth point cloud
+        lib.save_ply_file_from_realsense(filename="example_1")
+        lib.view_cloude_point_from_ply("example_1.ply")   
+
+    else:
+        print("Realsense camera is not present")
+        
+
+        #get point cloud
+
+
 
 
 if __name__ == "__main__":

@@ -45,15 +45,12 @@ def get_rgb_and_depth_image_from_realsense(print_logs = False, height = 480, wid
     '''
 
     try:
-        #pc = rs.pointcloud()
-        #points = rs.points()
         pipeline = rs.pipeline()
         config = rs.config()
 
         pipeline_wrapper = rs.pipeline_wrapper(pipeline)
         pipeline_profile = config.resolve(pipeline_wrapper)
         device = pipeline_profile.get_device()
-        #device_product_line = str(device.get_info(rs.camera_info.product_line))
 
         found_rgb = False
         for s in device.sensors:
@@ -68,8 +65,6 @@ def get_rgb_and_depth_image_from_realsense(print_logs = False, height = 480, wid
         config.enable_stream(rs.stream.depth, width, height, rs.format.z16, 30)
         config.enable_stream(rs.stream.color, width, height, rs.format.bgr8, 30)
         pipeline.start(config)
-        profile = pipeline.get_active_profile()
-        camera_params = profile.get_stream(rs.stream.depth).as_video_stream_profile().get_intrinsics()
         colorizer = rs.colorizer()
         align_to = rs.stream.color
         align = rs.align(align_to)
@@ -102,77 +97,24 @@ def get_rgb_and_depth_image_from_realsense(print_logs = False, height = 480, wid
 
         pipeline.stop()
         if print_logs: print("Data acquired")
-        return color_image, depth_image, camera_params
+        return color_image, depth_image
 
     except Exception as e:
         print(e)
-        return None, None, None
+        return None, None
     
-def get_point_cloud_from_realsense() -> rs.pointcloud:
-    '''
-        Function is looking for RealSense camera and returns point cloud.
-        If camera is not found, function returns None
-    '''
-
-    try:
-        pc = rs.pointcloud()
-    
-        pipeline = rs.pipeline()
-        config = rs.config()
-    
-        pipeline_wrapper = rs.pipeline_wrapper(pipeline)
-        pipeline_profile = config.resolve(pipeline_wrapper)
-        device = pipeline_profile.get_device()
-        #device_product_line = str(device.get_info(rs.camera_info.product_line))
-    
-        found_rgb = False
-        for s in device.sensors:
-            if s.get_info(rs.camera_info.name) == 'RGB Camera':
-                found_rgb = True
-                break
-        if not found_rgb:
-            print("No RGB camera found")
-            return None
         
-        config.enable_stream(rs.stream.depth, 848, 480, rs.format.z16, 30)
-        config.enable_stream(rs.stream.color, 848, 480, rs.format.bgr8, 30)
-        pipeline.start(config)
-        colorizer = rs.colorizer()
-        align_to = rs.stream.color
-        align = rs.align(align_to)
-    
-        print("Getting data...")
-
-        # depth_image = None
-        color_image = None
-        
-        for _ in range(20):
-            frames = pipeline.wait_for_frames()
-            aligned_frames = align.process(frames)
-            #colorized = colorizer.process(frames)
-
-            depth_frame = aligned_frames.get_depth_frame()
-            color_frame = aligned_frames.get_color_frame()
-
-        ply = rs.save_to_ply("./output.ply")
-        print("done")
-        pc.map_to(color_frame)
-        points = pc.calculate(depth_frame)
-
-        pipeline.stop()
-        return rs.pointcloud()
-    
-    except Exception as e:
-        print(e)
-        return None
-    
 def save_ply_file_from_realsense(filename: str) -> None:
     '''
         Function is looking for RealSense camera and saves point cloud to .ply file.
     '''
+    pc = rs.pointcloud()
+    points = rs.points()
     pipeline = rs.pipeline()
     config = rs.config()
-    config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
+    config.enable_stream(rs.stream.depth)
+
+    pipeline.start(config)
 
     colorizer = rs.colorizer()
 
@@ -184,7 +126,7 @@ def save_ply_file_from_realsense(filename: str) -> None:
         ply.set_option(rs.save_to_ply.option_ply_binary, False)
         ply.set_option(rs.save_to_ply.option_ply_normals, True)
 
-        print("Saving to {filename}.ply...")
+        print(f"Saving to {filename}.ply...")
         ply.process(colorized)
         print("Done")
     except Exception as e:
@@ -214,9 +156,9 @@ def get_realsense_camera_config() -> rs.intrinsics:
         return None
     
     pipeline.start(config)
-    pipeline.stop()
     profile = pipeline.get_active_profile()
     depth_intrinsics = profile.get_stream(rs.stream.depth).as_video_stream_profile().get_intrinsics()
+    pipeline.stop()
     
     return depth_intrinsics
     
