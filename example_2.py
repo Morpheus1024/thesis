@@ -17,8 +17,8 @@ def example_2():
     color_image, _ = lib.get_rgb_and_depth_image_from_realsense()
 
     # get semantic segmentation and depth estimation
-    segmented_image,labels,masks  = lib.use_BEiT_semantic(color_image, add_legend=True)
-    depth_image_AI,depth_dict = lib.use_BEiT_depth(color_image)
+    segmented_image,labels,masks  = lib.use_BEiT_semantic(color_image, add_legend=True) # here can by used any other semantic segmentation model aviable in library
+    depth_image_AI,depth_dict = lib.use_BEiT_depth(color_image) # here can by used any other depth estimation model aviable in library
 
     print(f"Amount of predicted labels: {len(labels)}")
     print(f"Labels: {labels}")
