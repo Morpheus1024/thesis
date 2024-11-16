@@ -10,3 +10,4 @@ sam*
 *.ply
 *zip
 *.json
+!example_3.png
