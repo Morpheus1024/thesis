@@ -4,8 +4,8 @@ import numpy as np
 import open3d as o3d
 from PIL import Image
 import pyrealsense2 as rs
-from transformers import BeitForSemanticSegmentation
-from transformers import pipeline, AutoImageProcessor
+#from transformers import BeitForSemanticSegmentation
+from transformers import pipeline#, AutoImageProcessor
 
 #MARK: Funckaje REALSENSE
 
@@ -26,7 +26,7 @@ def check_if_realsense_is_present(print_logs = False):
             if s.get_info(rs.camera_info.name) == 'RGB Camera':
                 found_rgb = True
                 if print_logs: print("Camera found")
-                break
+                return True
         if not found_rgb:
             print("No RGB camera found")
             return False
@@ -45,8 +45,8 @@ def get_rgb_and_depth_image_from_realsense(print_logs = False, height = 480, wid
     '''
 
     try:
-        pc = rs.pointcloud()
-        points = rs.points()
+        #pc = rs.pointcloud()
+        #points = rs.points()
         pipeline = rs.pipeline()
         config = rs.config()
 
@@ -101,6 +101,7 @@ def get_rgb_and_depth_image_from_realsense(print_logs = False, height = 480, wid
             break
 
         pipeline.stop()
+        if print_logs: print("Data acquired")
         return color_image, depth_image, camera_params
 
     except Exception as e:
@@ -217,7 +218,6 @@ def get_realsense_camera_config() -> rs.intrinsics:
     profile = pipeline.get_active_profile()
     depth_intrinsics = profile.get_stream(rs.stream.depth).as_video_stream_profile().get_intrinsics()
     
-    
     return depth_intrinsics
     
 def create_semantic_3D_map(segmented_color_image, depth_image, fx: float, fy: float, z_scale = 0.001, print_logs = False, save_ply = False) -> o3d.geometry.PointCloud: #MARK: 3D semantic map
@@ -262,7 +262,7 @@ def create_semantic_3D_map(segmented_color_image, depth_image, fx: float, fy: fl
     for v in range(depth_image.shape[0]):
         for u in range(depth_image.shape[1]):
             z = depth_image[v, u] * z_scale  
-            if z < 10:
+            if z ==0:
                 continue  
             x = (u - cx) * z / fx
             y =- (v - cy) * z / fy
@@ -286,6 +286,16 @@ def create_semantic_3D_map(segmented_color_image, depth_image, fx: float, fy: fl
         if print_logs: print("Ply file saved")
 
     return point_cloud
+
+def view_cloude_point_from_ply(filename: str) -> None:
+    '''
+        Function reads and displays .ply file.
+    '''
+    pcd = o3d.io.read_point_cloud(filename)
+    o3d.visualization.draw_geometries([pcd])
+
+def view_cloude_point(cloude_point) -> None:
+    o3d.visualization.draw_geometries([cloude_point])
 
 #MARK: Funkcje segmentacji
 
@@ -497,7 +507,8 @@ def use_BEiT_depth(image):
             - results (dict): The full results from the depth estimation pipeline.
     """
 
-
+    if not isinstance(image, Image.Image):
+        image = _cv2_to_pil(image)
 
     depth_estimation = pipeline("depth-estimation", model="Intel/dpt-beit-large-512")
 

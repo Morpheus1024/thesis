@@ -41,16 +41,26 @@ print("## START ##")
 
 #seed_list = [(100, 100), (200, 200), (300, 300), (400, 400)]
 
-#image = cv2.imread("./image.jpg")
-image = cv2.imread("./seg_image.png")
-print(image.shape)
 
-depth = cv2.imread("./depth_rs.png")
-depth = cv2.cvtColor(depth, cv2.COLOR_BGR2GRAY)
-print(len(depth.shape))
-depth = -depth
 
-ply = lib.create_semantic_3D_map(image, depth, fx = 385, fy = 385, print_logs=True, save_ply=True)
+image = Image.open("./color_rs.png")
+image = image.convert("RGB")
+#image.save("./color_image.jpg")
+depth,_ = lib.use_BEiT_depth(image)
+plt.imshow(depth, cmap='gray')
+plt.imsave("./depth_image.jpg", depth)
+plt.show()
+#plt.
+# image = cv2.imread("./seg_image.png")
+# image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+# print(image.shape)
+
+# depth = cv2.imread("./depth_rs.png")
+# depth = cv2.cvtColor(depth, cv2.COLOR_BGR2GRAY)
+# print(len(depth.shape))
+# depth = -depth
+
+# ply = lib.create_semantic_3D_map(image, depth, fx = 385, fy = 385, print_logs=True, save_ply=True, z_scale=1)
 
 
 # SegFormer
