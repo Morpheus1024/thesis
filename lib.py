@@ -75,24 +75,23 @@ def get_rgb_and_depth_image_from_realsense(print_logs = False, height = 480, wid
         if print_logs: print("Getting data...")
 
         while True:
-            for i in range(50):
-
+            
+            for i in range(100):
+                pipeline.wait_for_frames()
                 # Wait for a coherent pair of frames: depth and color
                 frames = pipeline.wait_for_frames()
                 aligned_frames = align.process(frames)
                 colorized = colorizer.process(frames)
-                
+
                 depth_frame = aligned_frames.get_depth_frame()
                 color_frame = aligned_frames.get_color_frame()
                 if not depth_frame or not color_frame:
                     continue
                 depth_image = np.asanyarray(frames.get_depth_frame().get_data())
-
                 # Convert images to numpy arrays
                 depth_image = np.asanyarray(depth_frame.get_data())
                 color_image = np.asanyarray(color_frame.get_data())
                 color_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB)
-
             break
 
         pipeline.stop()
@@ -496,12 +495,13 @@ def use_DeepLabV3(image, add_legend = False, model = 'apple'): #DONE
 
     return masked_image, [result['label'] for result in results], [result['mask'] for result in results]
     
-def use_OneFormer(image, task = 'semantic', model = 'large', dataset = 'ade20k', add_legend = False): #DONE
+def use_OneFormer(image, _task = 'semantic', model = 'large', dataset = 'ade20k', add_legend = False): #DONE
     '''
         Function takes an image and returns segmented image using OneFormer model.
         :param image: image to segment
         :param dataset: dataset to use (ade20k, coco, cityscapes)
         :param model: model to use (large, tiny - only for ade20k)
+        :return: segmented image, labels, masks
     '''
 
     if model not in ['large', 'tiny']:
@@ -517,6 +517,9 @@ def use_OneFormer(image, task = 'semantic', model = 'large', dataset = 'ade20k',
     model = f"shi-labs/oneformer_{dataset}_swin_{model}"
 
     semantic_segmentation = pipeline("image-segmentation", model="shi-labs/oneformer_ade20k_swin_large")   
+
+    if not isinstance(image, Image.Image):
+        image = _cv2_to_pil(image)
 
     results = semantic_segmentation(image)
     
@@ -558,6 +561,9 @@ def use_BEiT_semantic(image, add_legend = False, model = 'base'): #FIXME
     
     model = f"microsoft/beit-{model}-finetuned-ade-640-640" 
     semantic_segmentation = pipeline("image-segmentation", model=model)
+
+    if not isinstance(image, Image.Image):
+        image = _cv2_to_pil(image)
 
     results = semantic_segmentation(image)
     
