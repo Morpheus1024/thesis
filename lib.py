@@ -200,13 +200,15 @@ def create_semantic_3D_map(segmented_color_image, depth_image, fx: float, fy: fl
 
     if print_logs: print(f"cx: {cx}, cy: {cy}")
 
+
+
     for v in range(depth_image.shape[0]):
         for u in range(depth_image.shape[1]):
-            z = depth_image[v, u] * z_scale  
-            if z ==0:
+            z = depth_image[v, u] * z_scale
+            if z <=0:
                 continue  
-            x = (u - cx) * z / fx
-            y =- (v - cy) * z / fy
+            x = -(u - cx) * z / fx
+            y = -(v - cy) * z / fy
 
             points.append([x, y, z])
             color = segmented_color_image[v, u, :3] / 255.0  
@@ -218,8 +220,8 @@ def create_semantic_3D_map(segmented_color_image, depth_image, fx: float, fy: fl
         print(f"colors len: {len(colors)}")
 
     point_cloud = o3d.geometry.PointCloud()
-    point_cloud.points = o3d.utility.Vector3dVector(np.array(points, dtype=np.float64))
-    point_cloud.colors = o3d.utility.Vector3dVector(np.array(colors, dtype=np.float64))
+    point_cloud.points = o3d.utility.Vector3dVector(np.array(points, dtype=np.float32))
+    point_cloud.colors = o3d.utility.Vector3dVector(np.array(colors, dtype=np.float32))
 
 
     if save_ply: 

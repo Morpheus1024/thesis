@@ -11,3 +11,6 @@ sam*
 *zip
 *.json
 !example_3.png
+!./testy*
+!depth_image*
+!sposób*
