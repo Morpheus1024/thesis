@@ -1,64 +1,71 @@
 import lib
+import cv2
 import matplotlib.pyplot as plt
 
-def read_depth_measurement(depth_image):
-    return depth_image[240, 320]
-
-def test_1():
+def test_2():
 
     camera_present = lib.check_if_realsense_is_present()
     
     if not camera_present:
         print("Camera not found")
         return
+
+    camera_config = lib.get_realsense_camera_config()
+    color_image, depth_image = lib.get_rgb_and_depth_image_from_realsense()
+
+    gaussian_blur_depth_11= cv2.GaussianBlur(depth_image, (3,3), 0)
+    gaussian_blur_depth_12= cv2.GaussianBlur(depth_image, (3,3), 1)
+    gaussian_blur_depth_13= cv2.GaussianBlur(depth_image, (3,3), 5)
+
+    gaussian_blur_depth_21= cv2.GaussianBlur(depth_image, (5,5), 0)
+    gaussian_blur_depth_22= cv2.GaussianBlur(depth_image, (5,5), 1)
+    gaussian_blur_depth_23= cv2.GaussianBlur(depth_image, (5,5), 5)
+
+    gaussian_blur_depth_31= cv2.GaussianBlur(depth_image, (7,7), 0)
+    gaussian_blur_depth_32= cv2.GaussianBlur(depth_image, (7,7), 1)
+    gaussian_blur_depth_33= cv2.GaussianBlur(depth_image, (7,7), 5)
+
+
+
     
-    print("Please enter the distance in cm to wait for the camera to focus on:")
-    wait_30cm = input("30 cm: ")
-    _, depth_image30 = lib.get_rgb_and_depth_image_from_realsense()
-    print(read_depth_measurement(depth_image30))
 
-    print("Please enter the distance in cm to wait for the camera to focus on:")
-    wait_50cm = input("50 cm: ")
-    _, depth_image50 = lib.get_rgb_and_depth_image_from_realsense()
-    print(read_depth_measurement(depth_image50))
-
-    print("Please enter the distance in cm to wait for the camera to focus on:")
-    wait_70cm = input("70 cm: ")
-    _, depth_image70 = lib.get_rgb_and_depth_image_from_realsense()
-    print(read_depth_measurement(depth_image70))
-
-    print("Please enter the distance in cm to wait for the camera to focus on:")
-    wait_100cm = input("100 cm: ")
-    _, depth_image100 = lib.get_rgb_and_depth_image_from_realsense()
-    print(read_depth_measurement(depth_image100))
-
-
-    fig = plt.figure(figsize=(20, 5))
-    fig.add_subplot(1,4,1)
-    plt.imshow(depth_image30)
-    plt.title("Depth Image at 30 cm")
-    fig.add_subplot(1,4,2)
-    plt.imshow(depth_image50)
-    plt.title("Depth Image at 50 cm")
-    fig.add_subplot(1,4,3)
-    plt.imshow(depth_image70)
-    plt.title("Depth Image at 70 cm")
-    fig.add_subplot(1,4,4)
-    plt.imshow(depth_image100)
-    plt.title("Depth Image at 100 cm")
+    #display two depth images
+    fig = plt.figure(figsize=(20, 17))
+    fig.add_subplot(3,3,2)
+    plt.imshow(depth_image)
+    plt.title("Original Depth Image")
+    fig.add_subplot(3,3,4)
+    plt.imshow(gaussian_blur_depth_11)
+    plt.title("Gaussian Blur 3x3, sigma=0")
+    fig.add_subplot(4,3,5)
+    plt.imshow(gaussian_blur_depth_12)
+    plt.title("Gaussian Blur 3x3, sigma=1")
+    fig.add_subplot(3,3,6)
+    plt.imshow(gaussian_blur_depth_13)
+    plt.title("Gaussian Blur 3x3, sigma=5")
+    fig.add_subplot(3,3,7)
+    plt.imshow(gaussian_blur_depth_31)
+    plt.title("Gaussian Blur 7x7, sigma=0")
+    fig.add_subplot(3,3,8)
+    plt.imshow(gaussian_blur_depth_32)
+    plt.title("Gaussian Blur 7x7, sigma=1")
+    fig.add_subplot(3,3,9)
+    plt.imshow(gaussian_blur_depth_33)
+    plt.title("Gaussian Blur 7x7, sigma=5")
 
     plt.show()
 
-    plt.imsave("./testy/depth_image302.png", depth_image30)
-    plt.imsave("./testy/depth_image502.png", depth_image50)
-    plt.imsave("./testy/depth_image702.png", depth_image70)
-    plt.imsave("./testy/depth_image1002.png", depth_image100)
+
+    point_cloud1 = lib.create_semantic_3D_map(color_image, depth_image, fx = camera_config.fx, fy = camera_config.fy, z_scale=0.001)
+
+    point_cloud2 = lib.create_semantic_3D_map(color_image, gaussian_blur_depth_11, fx = camera_config.fx, fy = camera_config.fy)
+    point_cloud3 = lib.create_semantic_3D_map(color_image, gaussian_blur_depth_33, fx = camera_config.fx, fy = camera_config.fy)
+
+    lib.view_cloude_point(point_cloud1)
+    lib.view_cloude_point(point_cloud2)
+    lib.view_cloude_point(point_cloud3)
 
 
 
-
-
-
-
-if __name__ == "__main__":
-    test_1()
+if __name__ == '__main__':
+    test_2()
