@@ -500,7 +500,7 @@ def use_Depth_Anything(image, model: str = "small"):
 
 #MARK: Funkcje segmentacji semantycznej obrazu
 
-def use_DeepLabV3(image, add_legend = False, model = 'apple'): #DONE
+def use_DeepLabV3(image, add_legend = False, model = 'apple', test_colors: bool = False): #DONE
 
     if model not in ['apple', 'apple-xx', 'google']:
         raise ValueError("Model must be 'apple', 'apple-xx' or 'google'")
@@ -511,11 +511,12 @@ def use_DeepLabV3(image, add_legend = False, model = 'apple'): #DONE
 
     device = "CUDA" if torch.cuda.is_available() else -1
 
-    semantic_segmentation = pipeline("image-segmentation", model="model", device=device)   
+    semantic_segmentation = pipeline("image-segmentation", model=model, device=device)   
 
     results = semantic_segmentation(image)
     
-    colors = generate_color_palette(len(results))
+    colors = _generate_color_palette_for_testy(len(results)) if test_colors else generate_color_palette(len(results))
+    #print(colors)
 
     for i in range(len(results)):
         results[i]['color'] = colors[i]
@@ -549,7 +550,6 @@ def use_OneFormer(image, _task = 'semantic', model = 'large', dataset = 'ade20k'
 
     if model not in ['large', 'tiny']:
         raise ValueError("Model must be 'large' or 'tiny'")
-        return None, None, None
 
     if dataset not in ['ade20k', 'coco', 'cityscapes']:
         raise ValueError("Dataset must be 'ade20k', 'cityscapes' or 'coco'")
@@ -873,3 +873,40 @@ def log_execution_time(start_time, function_name: str, print_log = False) -> Non
 
     with open("execution_time_log.txt", "a") as file:
         file.write(f"{function_name} {execution_time:.4f} \n")
+
+
+def _generate_color_palette_for_testy(n: int):
+    """
+    Generate a color palette with n colors.
+    Parameters:
+    n (int): The number of colors to generate.
+    Returns:
+    list: A list of n colors in RGB format.
+    """
+    colors = [
+        (255, 1, 1),    # Czerwony
+        (1, 255, 1),    # Zielony
+        (1, 1, 255),    # Niebieski
+        (255, 255, 1),  # Żółty
+        (1, 255, 255),  # Cyjan
+        (255, 1, 255),  # Magenta
+        (192, 192, 192),# Srebrny
+        (128, 128, 128),# Szary
+        (128, 1, 1),    # Bordowy
+        (128, 128, 1),  # Oliwkowy
+        (1, 128, 1),    # Ciemnozielony
+        (128, 1, 128),  # Purpurowy
+        (1, 128, 128),  # Teal
+        (1, 1, 128),    # Granatowy
+        (255, 165, 1),  # Pomarańczowy
+        (255, 192, 203),# Różowy
+        (75, 1, 130),   # Indygo
+        (240, 230, 140),# Khaki
+        (173, 216, 230),# Jasnoniebieski
+        (139, 69, 19)   # Brązowy
+    ]
+
+    if n > len(colors):
+        colors.extend(generate_color_palette(n - len(colors)))
+
+    return colors[:n]
