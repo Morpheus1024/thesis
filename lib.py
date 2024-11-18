@@ -1,11 +1,13 @@
 import cv2
+import time
 import torch
 import numpy as np
 import open3d as o3d
 from PIL import Image
 import pyrealsense2 as rs
-#from transformers import BeitForSemanticSegmentation
-from transformers import pipeline#, AutoImageProcessor
+from transformers import pipeline
+from transformers import AutoImageProcessor, DPTForDepthEstimation
+
 
 #MARK: Funckaje REALSENSE
 
@@ -398,7 +400,7 @@ def use_MiDaS(image, model = "MiDaS_small"): #DONE
             align_corners=False,
         ).squeeze()
 
-    return prediction.cpu().numpy()
+    return prediction.cpu().numpy(), prediction
 
 def use_MiDaS_Hybrid(image):
     """
@@ -412,11 +414,19 @@ def use_MiDaS_Hybrid(image):
             - results: The full results dictionary from the depth estimation pipeline.
     """
 
-    depth_estimation = pipeline("depth-estimation", model="Intel/dpt-hybrid-midas")
+    device = "cuda" if torch.cuda.is_available() else -1
+
+    depth_estimation = pipeline("depth-estimation", model="Intel/dpt-hybrid-midas", device=device)
+
+    if not isinstance(image, Image.Image):
+        image = _cv2_to_pil(image)
 
     results = depth_estimation(image)
+    depth = results['depth']
+    # depth = np.array(depth)
+    # depth = depth * 255 /depth.max()
 
-    return results['depth'], results
+    return depth, results
 
 def use_EVP(image): #FIXME:  nie działa???
     """
@@ -429,7 +439,9 @@ def use_EVP(image): #FIXME:  nie działa???
         - results (dict): The full results dictionary from the depth estimation pipeline.
     """
 
-    depth_estimation = pipeline("feature-extraction", model="MykolaL/evp_depth", trust_remote_code=True)
+    device = "cuda" if torch.cuda.is_available() else -1
+
+    depth_estimation = pipeline("depth-estimation", model="MykolaL/evp_depth", trust_remote_code=True, device = device)
 
     results = depth_estimation(image)
 
@@ -453,11 +465,38 @@ def use_BEiT_depth(image):
     if not isinstance(image, Image.Image):
         image = _cv2_to_pil(image)
 
-    depth_estimation = pipeline("depth-estimation", model="Intel/dpt-beit-large-512")
+    device = "CUDA" if torch.cuda.is_available() else -1
+
+    depth_estimation = pipeline("depth-estimation", model="Intel/dpt-beit-large-512", device=device)
+
+    results = depth_estimation(image)
+    depth = results['depth']
+    # depth = np.array(depth)
+    # depth = depth * 255 /depth.max()
+    #depth = Image.fromarray(depth.astype("uint8"))
+
+    return depth, results
+
+def use_Depth_Anything(image, model: str = "small"):
+
+    if model not in ["small","base", "large"]:
+        raise ValueError("Model must be 'small', 'base' or 'large'")
+
+    if not isinstance(image, Image.Image):
+        image = _cv2_to_pil(image)
+
+    device = "CUDA" if torch.cuda.is_available() else -1
+
+    depth_estimation = pipeline("depth-estimation", model=f"LiheYoung/depth-anything-{model}-hf", device=device)
 
     results = depth_estimation(image)
 
-    return results['depth'], results
+    depth = results['depth']
+    # depth = np.array(depth)
+    # depth = depth * 255 /torch.max(results['predicted_depth']).item()
+    #depth = Image.fromarray(depth.astype("uint8"))
+
+    return depth, results
 
 #MARK: Funkcje segmentacji semantycznej obrazu
 
@@ -470,7 +509,9 @@ def use_DeepLabV3(image, add_legend = False, model = 'apple'): #DONE
     elif model == 'apple-xx': model="apple/deeplabv3-mobilevit-xx-small"
     elif model == 'google': model="google/deeplabv3_mobilenet_v2_1.0_513"
 
-    semantic_segmentation = pipeline("image-segmentation", model="model")   
+    device = "CUDA" if torch.cuda.is_available() else -1
+
+    semantic_segmentation = pipeline("image-segmentation", model="model", device=device)   
 
     results = semantic_segmentation(image)
     
@@ -518,7 +559,9 @@ def use_OneFormer(image, _task = 'semantic', model = 'large', dataset = 'ade20k'
 
     model = f"shi-labs/oneformer_{dataset}_swin_{model}"
 
-    semantic_segmentation = pipeline("image-segmentation", model="shi-labs/oneformer_ade20k_swin_large")   
+    device = "CUDA" if torch.cuda.is_available() else -1
+
+    semantic_segmentation = pipeline("image-segmentation", model="shi-labs/oneformer_ade20k_swin_large",device = device)   
 
     if not isinstance(image, Image.Image):
         image = _cv2_to_pil(image)
@@ -562,7 +605,10 @@ def use_BEiT_semantic(image, add_legend = False, model = 'base'): #FIXME
         return None, None, None
     
     model = f"microsoft/beit-{model}-finetuned-ade-640-640" 
-    semantic_segmentation = pipeline("image-segmentation", model=model)
+
+    device = "CUDA" if torch.cuda.is_available() else -1
+
+    semantic_segmentation = pipeline("image-segmentation", model=model, device=device)
 
     if not isinstance(image, Image.Image):
         image = _cv2_to_pil(image)
@@ -602,7 +648,9 @@ def use_SegFormer(image, add_legend = False, dataset = 'ade'): #DONE
     if dataset == 'ade': model = "nvidia/segformer-b0-finetuned-ade-512-512"
     elif dataset == 'cityscapes': model = "nvidia/segformer-b1-finetuned-cityscapes-1024-1024"
     
-    semantic_segmentation = pipeline("image-segmentation",  model=model)   
+    device = "CUDA" if torch.cuda.is_available() else -1
+
+    semantic_segmentation = pipeline("image-segmentation",  model=model, device=device)   
 
     results = semantic_segmentation(image)
     
@@ -657,7 +705,9 @@ def use_MaskFormer(image, add_legend = False, model = 'base', dataset = 'coco'):
 
     model = f"facebook/maskformer-swin-{model}-{dataset}"
 
-    semantic_segmentation = pipeline("image-segmentation", model=model)   
+    device = "CUDA" if torch.cuda.is_available() else -1
+
+    semantic_segmentation = pipeline("image-segmentation", model=model, device=device)   
 
     results = semantic_segmentation(image)
     
@@ -693,7 +743,9 @@ def use_mask2former(image, add_legend=False, model = 'base', dataset = 'coco'): 
 
     model = f"facebook/mask2former-swin-{model}-coco-panoptic"
 
-    paoptic_segmentation = pipeline("image-segmentation", model=model)   
+    device = "CUDA" if torch.cuda.is_available() else -1
+
+    paoptic_segmentation = pipeline("image-segmentation", model=model, device=device)   
 
     results = paoptic_segmentation(image)
     
@@ -725,7 +777,9 @@ def use_ResNet_panoptic(image, add_legend = False, model = '50'):
     if model not in ['50', '101']:
         raise ValueError("Model must be '50' or '101'")
     
-    paoptic_segmentation = pipeline("image-segmentation", model=f"facebook/detr-resnet-{model}-panoptic")   
+    device = "CUDA" if torch.cuda.is_available() else -1
+
+    paoptic_segmentation = pipeline("image-segmentation", model=f"facebook/detr-resnet-{model}-panoptic", device=device)   
 
     results = paoptic_segmentation(image)
     
@@ -809,3 +863,13 @@ def generate_color_palette(n: int):
     for i in range(n):
         palette.append((np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0, 255)))
     return palette
+
+def log_execution_time(start_time, function_name: str, print_log = False) -> None:
+    '''
+        Function logs the execution time of a function.
+    '''
+    execution_time = time.time() - start_time
+    if print_log: print(f"Execution time of {function_name}: {execution_time:.2f} seconds")
+
+    with open("execution_time_log.txt", "a") as file:
+        file.write(f"{function_name} {execution_time:.4f} \n")

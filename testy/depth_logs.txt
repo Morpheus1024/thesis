@@ -1,0 +1,40 @@
+Depth at center: 1724
+BEiT center result: 3073.314208984375
+MiDaS_Hybrid center result: 1020.1954956054688
+Depth Anything small center result: 6.653570652008057
+Depth Anything large center result: 73.12625122070312
+Depth Anything base center result: 21.558813095092773
+
+
+Depth at center: 1753
+BEiT center result: 2998.040283203125
+MiDaS_Hybrid center result: 1019.68701171875
+Depth Anything small center result: 6.836512565612793
+Depth Anything large center result: 72.46141815185547
+Depth Anything base center result: 20.927873611450195
+
+
+Depth at center: 1748
+BEiT center result: 2680.513427734375
+MiDaS_Hybrid center result: 1116.058837890625
+Depth Anything small center result: 6.847126483917236
+Depth Anything large center result: 74.78218841552734
+Depth Anything base center result: 21.746076583862305
+
+
+Depth at center: 1743
+BEiT center result: 3056.88232421875
+MiDaS_Hybrid center result: 1155.7064208984375
+Depth Anything small center result: 7.4647040367126465
+Depth Anything large center result: 75.12980651855469
+Depth Anything base center result: 21.52124786376953
+
+
+Depth at center: 1738
+BEiT center result: 3216.548095703125
+MiDaS_Hybrid center result: 1005.79248046875
+Depth Anything small center result: 7.15766716003418
+Depth Anything large center result: 77.7781753540039
+Depth Anything base center result: 22.63536262512207
+
+
