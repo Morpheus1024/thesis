@@ -16,3 +16,43 @@ oneformer-large-coco oneformer-tiny-ade20k table 1.0
 oneformer-large-cityscapes oneformer-tiny-ade20k wall 1.0
 oneformer-large-cityscapes oneformer-tiny-ade20k table 1.0
 
+BEiT-base BEiT-large wall 0.5438788672323159
+BEiT-base BEiT-large desk 0.12687663793161827
+
+SegFormer-ade20k SegFormer-cityscapes
+
+ResNet_panoptic-50 ResNet_panoptic-101 tv 0.951624109779399
+ResNet_panoptic-50 ResNet_panoptic-101 LABEL_199 0.883233794247098
+ResNet_panoptic-50 ResNet_panoptic-101 cup 0.9670503178626335
+
+use_mask2former_base use_mask2former_large cup 0.9928127305300875
+use_mask2former_base use_mask2former_large table-merged 0.9940729574400657
+use_mask2former_base use_mask2former_large tv 0.9900242000537779
+use_mask2former_base use_mask2former_large wall-other-merged 0.9784112255934423
+maskformer-tiny-coco maskformer-small-coco wall-other-merged 0.48332188015393074
+maskformer-tiny-coco maskformer-small-coco cup 0.9881854940611574
+maskformer-tiny-coco maskformer-small-coco table-merged 0.9698304020633426
+maskformer-tiny-coco maskformer-base-coco wall-other-merged 0.43633340890198746
+maskformer-tiny-coco maskformer-base-coco cup 0.9893094542529319
+maskformer-tiny-coco maskformer-base-coco table-merged 0.9556161686935922
+maskformer-tiny-coco maskformer-large-coco wall-other-merged 0.4661922685935654
+maskformer-tiny-coco maskformer-large-coco cup 0.9831742948826212
+maskformer-tiny-coco maskformer-large-coco table-merged 0.9685125966533001
+maskformer-tiny-ade maskformer-small-ade wall 1.0
+maskformer-tiny-ade maskformer-base-ade wall 1.0
+maskformer-tiny-ade maskformer-large-ade wall 0.7966015625
+maskformer-small-coco maskformer-base-coco wall-other-merged 0.8775253055567223
+maskformer-small-coco maskformer-base-coco table-merged 0.966348065200106
+maskformer-small-coco maskformer-base-coco tv 0.9355228770917033
+maskformer-small-coco maskformer-base-coco cup 0.9872339526134466
+maskformer-small-coco maskformer-large-coco wall-other-merged 0.9212702200271913
+maskformer-small-coco maskformer-large-coco table-merged 0.9706799802637631
+maskformer-small-coco maskformer-large-coco tv 0.9656122339281875
+maskformer-small-coco maskformer-large-coco cup 0.9829950630828305
+maskformer-small-ade maskformer-base-ade wall 1.0
+maskformer-small-ade maskformer-large-ade wall 0.7966015625
+maskformer-base-coco maskformer-large-coco tv 0.9637922077922078
+maskformer-base-coco maskformer-large-coco cup 0.9845990666100976
+maskformer-base-coco maskformer-large-coco table-merged 0.9766954961242242
+maskformer-base-coco maskformer-large-coco wall-other-merged 0.9237161885844483
+maskformer-base-ade maskformer-large-ade wall 0.7966015625

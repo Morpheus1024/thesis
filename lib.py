@@ -591,7 +591,7 @@ def use_OneFormer(image, _task = 'semantic', model = 'large', dataset = 'ade20k'
 
     return masked_image, [result['label'] for result in results], [result['mask'] for result in results]
        
-def use_BEiT_semantic(image, add_legend = False, model = 'base'): #FIXME
+def use_BEiT_semantic(image, add_legend = False, model = 'base', test_colors = False): #FIXME
 
     '''
     [link](https://huggingface.co/docs/transformers/main/en/model_doc/beit#transformers.BeitForImageClassification)
@@ -615,7 +615,7 @@ def use_BEiT_semantic(image, add_legend = False, model = 'base'): #FIXME
 
     results = semantic_segmentation(image)
     
-    colors = generate_color_palette(len(results))
+    colors = _generate_color_palette_for_testy(len(results)) if test_colors else generate_color_palette(len(results))
 
     for i in range(len(results)):
         results[i]['color'] = colors[i]
@@ -638,14 +638,14 @@ def use_BEiT_semantic(image, add_legend = False, model = 'base'): #FIXME
 
     return masked_image, [result['label'] for result in results], [result['mask'] for result in results]
     
-def use_SegFormer(image, add_legend = False, dataset = 'ade'): #DONE
+def use_SegFormer(image, add_legend = False, dataset = 'ade20k', test_colors = False): #DONE
     #https://huggingface.co/nvidia/segformer-b0-finetuned-ade-512-512
 
-    if dataset not in ['ade', 'cityscapes']:
-        raise ValueError("Dataset must be 'ade' or 'cityscapes'")
+    if dataset not in ['ade20k', 'cityscapes']:
+        raise ValueError("Dataset must be 'ade20k' or 'cityscapes'")
         return None, None, None
 
-    if dataset == 'ade': model = "nvidia/segformer-b0-finetuned-ade-512-512"
+    if dataset == 'ade20k': model = "nvidia/segformer-b0-finetuned-ade-512-512"
     elif dataset == 'cityscapes': model = "nvidia/segformer-b1-finetuned-cityscapes-1024-1024"
     
     device = "CUDA" if torch.cuda.is_available() else -1
@@ -654,7 +654,7 @@ def use_SegFormer(image, add_legend = False, dataset = 'ade'): #DONE
 
     results = semantic_segmentation(image)
     
-    colors = generate_color_palette(len(results))
+    colors = _generate_color_palette_for_testy(len(results)) if test_colors else generate_color_palette(len(results))
 
     for i in range(len(results)):
         results[i]['color'] = colors[i]
@@ -677,7 +677,7 @@ def use_SegFormer(image, add_legend = False, dataset = 'ade'): #DONE
 
     return masked_image, [result['label'] for result in results], [result['mask'] for result in results]
 
-def use_MaskFormer(image, add_legend = False, model = 'base', dataset = 'coco'):
+def use_MaskFormer(image, add_legend = False, model = 'base', dataset = 'coco', test_colors= False):
 
     """
     Apply MaskFormer model for semantic segmentation on the given image.
@@ -711,7 +711,7 @@ def use_MaskFormer(image, add_legend = False, model = 'base', dataset = 'coco'):
 
     results = semantic_segmentation(image)
     
-    colors = generate_color_palette(len(results))
+    colors = _generate_color_palette_for_testy(len(results)) if test_colors else generate_color_palette(len(results))
 
     for i in range(len(results)):
         results[i]['color'] = colors[i]
@@ -735,7 +735,7 @@ def use_MaskFormer(image, add_legend = False, model = 'base', dataset = 'coco'):
     return masked_image, [result['label'] for result in results], [result['mask'] for result in results]
 
 #MARK: Funkcje segmentacji panopticon
-def use_mask2former(image, add_legend=False, model = 'base', dataset = 'coco'): #DONE
+def use_mask2former(image, add_legend=False, model = 'base', test_colors = False): #DONE
 
     if model not in ['base', 'large']:
         raise ValueError("Model must be 'base' or 'large'")
@@ -749,7 +749,7 @@ def use_mask2former(image, add_legend=False, model = 'base', dataset = 'coco'): 
 
     results = paoptic_segmentation(image)
     
-    colors = generate_color_palette(len(results))
+    colors = _generate_color_palette_for_testy(len(results)) if test_colors else generate_color_palette(len(results))
 
     for i in range(len(results)):
         results[i]['color'] = colors[i]
@@ -772,7 +772,7 @@ def use_mask2former(image, add_legend=False, model = 'base', dataset = 'coco'): 
 
     return masked_image, [result['label'] for result in results], [result['mask'] for result in results]
         
-def use_ResNet_panoptic(image, add_legend = False, model = '50'):
+def use_ResNet_panoptic(image, add_legend = False, model = '50', test_colors = False):
 
     if model not in ['50', '101']:
         raise ValueError("Model must be '50' or '101'")
@@ -783,12 +783,11 @@ def use_ResNet_panoptic(image, add_legend = False, model = '50'):
 
     results = paoptic_segmentation(image)
     
-    colors = generate_color_palette(len(results))
+    colors = _generate_color_palette_for_testy(len(results)) if test_colors else generate_color_palette(len(results))
 
     for i in range(len(results)):
         results[i]['color'] = colors[i]
     
-
     masked_image = np.zeros_like(image)
 
     for result in results:
