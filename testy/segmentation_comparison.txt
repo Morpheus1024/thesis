@@ -1,0 +1,18 @@
+deeplabv3-apple deeplabv3-apple-xx background 0.9934439767589819
+deeplabv3-apple deeplabv3-apple-xx tvmonitor 0.9782124704202081
+deeplabv3-apple deeplabv3-google background 0.5463528829529878
+deeplabv3-apple-xx deeplabv3-google background 0.5465482380597331
+
+oneformer-large-ade20k oneformer-large-coco wall 1.0
+oneformer-large-ade20k oneformer-large-coco table 1.0
+oneformer-large-ade20k oneformer-large-cityscapes wall 1.0
+oneformer-large-ade20k oneformer-large-cityscapes table 1.0
+oneformer-large-ade20k oneformer-tiny-ade20k wall 1.0
+oneformer-large-ade20k oneformer-tiny-ade20k table 1.0
+oneformer-large-coco oneformer-large-cityscapes wall 1.0
+oneformer-large-coco oneformer-large-cityscapes table 1.0
+oneformer-large-coco oneformer-tiny-ade20k wall 1.0
+oneformer-large-coco oneformer-tiny-ade20k table 1.0
+oneformer-large-cityscapes oneformer-tiny-ade20k wall 1.0
+oneformer-large-cityscapes oneformer-tiny-ade20k table 1.0
+

@@ -4,25 +4,33 @@ import time
 import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
-#from sklearn.metrics import jaccard_score
 
-def IoU(image1, image2):
-    # Convert images to numpy arrays
-    image1 = np.array(image1)
-    image2 = np.array(image2)
-    
-    # Ensure the images have the same shape
-    assert image1.shape == image2.shape, "Images must have the same shape to compute IoU"
-    
-    # Calculate intersection and union
-    intersection = np.logical_and(image1, image2)
-    intersection = np.sum(intersection)
-    union = np.logical_or(image1, image2)
-    union = np.sum(union)
-    
-    # Compute IoU
-    iou = intersection / union
-    return iou
+def save_segmentation_comparison(model1, model2, label, IoU):
+    with open("./testy/segmentation_comparison.txt", "a") as f:
+        f.write(f"{model1} {model2} {label} {IoU}\n")
+
+def compare_segmentations(masks1, labels1, masks2, labels2, model1, model2, save_comparison = False):
+
+    for i in range(len(labels1)):
+        for j in range(len(labels2)):
+            if labels1[i] == labels2[j]:
+                intersection = np.logical_and(masks1[i], masks2[j])
+                union = np.logical_or(masks1[i], masks2[j])
+                iou_score = np.sum(intersection) / np.sum(union)
+                print(f"IoU for {labels1[i]}: {iou_score}")
+                if save_comparison:
+                    save_segmentation_comparison(model1, model2, labels1[i], iou_score)
+
+    # Calculate percentage of each label in the segmented images
+def calculate_label_percentage(segmented_image, labels):
+    label_percentages = {}
+    total_pixels = segmented_image.size
+    for label in labels:
+        label_mask = (segmented_image == label)
+        label_pixels = np.sum(label_mask)
+        label_percentages[label] = (label_pixels / total_pixels) * 100
+    return label_percentages
+               
 
 def test_3():   
 
@@ -79,7 +87,6 @@ def test_3():
     plt.xlabel(f"Labels: {', '.join(labels3)}")
 
     # display difference between segmented images
-
     segmented_image1 = np.array(segmented_image1)
     segmented_image2 = np.array(segmented_image2)
     segmented_image3 = np.array(segmented_image3)
@@ -105,16 +112,6 @@ def test_3():
 
     plt.show()
 
-    # Calculate percentage of each label in the segmented images
-    def calculate_label_percentage(segmented_image, labels):
-        label_percentages = {}
-        total_pixels = segmented_image.size
-        for label in labels:
-            label_mask = (segmented_image == label)
-            label_pixels = np.sum(label_mask)
-            label_percentages[label] = (label_pixels / total_pixels) * 100
-        return label_percentages
-
     label_percentages1 = calculate_label_percentage(segmented_image1, labels1)
     label_percentages2 = calculate_label_percentage(segmented_image2, labels2)
     label_percentages3 = calculate_label_percentage(segmented_image3, labels3)
@@ -124,20 +121,14 @@ def test_3():
     print("Label percentages for deeplabv3-google: ", label_percentages3)
 
 
-
-
-    # wyniki zgodności etykiet poszczegołnych modeli:
-
-    common_labels_1_2 = set(labels1).intersection(labels2)
-    common_labels_1_3 = set(labels1).intersection(labels3)
-    common_labels_2_3 = set(labels2).intersection(labels3)
-    print("Common labels between deeplabv3-apple and deeplabv3-apple-xx: ", common_labels_1_2, len(common_labels_1_2)/len(labels1))
-    #print(f"Iou: {IoU(masks1, masks2)}")
-    #print(jaccard_score(np.array(segmented_image1).flatten()), np.array(segmented_image2).flatten())
-    print("Common labels between deeplabv3-apple and deeplabv3-google: ", common_labels_1_3, len(common_labels_1_3)/len(labels1))
-    #print(f"Iou: {IoU(segmented_image1, segmented_image3)}")
-    print("Common labels between deeplabv3-apple-xx and deeplabv3-google: ", common_labels_2_3, len(common_labels_2_3)/len(labels2))
-    #print(f"Iou: {IoU(segmented_image2, segmented_image3)}")
+    print()
+    print("Comparing segmentations:")
+    print("Apple - Apple-XX:")
+    compare_segmentations(masks1, labels1, masks2, labels2, model1 = "deeplabv3-apple", model2 = "deeplabv3-apple-xx", save_comparison=True)
+    print("Apple - Google:")
+    compare_segmentations(masks1, labels1, masks3, labels3, model1 = "deeplabv3-apple", model2 = "deeplabv3-google", save_comparison=True)
+    print("Apple-XX - Google:")
+    compare_segmentations(masks2, labels2, masks3, labels3, model1="deeplabv3-apple-xx", model2="deeplabv3-google", save_comparison=True)
 
 
 

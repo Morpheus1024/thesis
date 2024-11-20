@@ -539,7 +539,7 @@ def use_DeepLabV3(image, add_legend = False, model = 'apple', test_colors: bool 
 
     return masked_image, [result['label'] for result in results], [result['mask'] for result in results]
     
-def use_OneFormer(image, _task = 'semantic', model = 'large', dataset = 'ade20k', add_legend = False): #DONE
+def use_OneFormer(image, _task = 'semantic', model = 'large', dataset = 'ade20k', add_legend = False, test_colors = False): #DONE
     '''
         Function takes an image and returns segmented image using OneFormer model.
         :param image: image to segment
@@ -568,7 +568,7 @@ def use_OneFormer(image, _task = 'semantic', model = 'large', dataset = 'ade20k'
 
     results = semantic_segmentation(image)
     
-    colors = generate_color_palette(len(results))
+    colors = _generate_color_palette_for_testy(len(results)) if test_colors else generate_color_palette(len(results))
 
     for i in range(len(results)):
         results[i]['color'] = colors[i]
@@ -864,11 +864,12 @@ def generate_color_palette(n: int):
         palette.append((np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0, 255)))
     return palette
 
-def log_execution_time(start_time, function_name: str, print_log = False) -> None:
+def log_execution_time(time, function_name: str, print_log = False) -> None:
     '''
         Function logs the execution time of a function.
     '''
-    execution_time = time.time() - start_time
+    #execution_time = time.time() - start_time
+    execution_time = time
     if print_log: print(f"Execution time of {function_name}: {execution_time:.2f} seconds")
 
     with open("execution_time_log.txt", "a") as file:
