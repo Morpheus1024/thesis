@@ -9,6 +9,14 @@ def save_segmentation_comparison(model1, model2, label, IoU):
     with open("./testy/segmentation_comparison.txt", "a") as f:
         f.write(f"{model1} {model2} {label} {IoU}\n")
 
+def save_label(model_name, labels):
+    label = ""
+    for l in labels:
+        label += l + ", "
+    
+    with open("./testy/etykiety.txt", "a") as f:
+        f.write(f"{model_name}: {label}\n")
+
 def compare_segmentations(masks1, labels1, masks2, labels2, model1, model2, save_comparison = False):
 
     for i in range(len(labels1)):
@@ -45,6 +53,7 @@ def test_3():
     lib.log_execution_time(end, "use_SegFormer-ade20k")
     print("segformer-ade20k")
     print("Labels: ", labels1)
+    save_label("segformer-ade20k", labels1)
 
     start = time.time()
     segmented_image2,labels2,masks2 = lib.use_SegFormer(image, dataset = 'cityscapes', test_colors = True)
@@ -53,6 +62,7 @@ def test_3():
     lib.log_execution_time(end, "use-SegFormer-cityscapes")
     print("segformer-cityscapes")
     print("Labels: ", labels2)
+    save_label("segformer-cityscapes", labels2)
 
 
 
@@ -98,7 +108,7 @@ def test_3():
     print()
     print("Comparing segmentations:")
     print("SegFormer-ade20k vs SegFormer-cityscapes")
-    compare_segmentations(masks1, labels1, masks2, labels2, model1 = "SegFormer-ade20k", model2 = "SegFormer-cityscapes", save_comparison=True)
+    compare_segmentations(masks1, labels1, masks2, labels2, model1 = "SegFormer-ade20k", model2 = "SegFormer-cityscapes", save_comparison=False)
 
 
 

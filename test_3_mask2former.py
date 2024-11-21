@@ -30,6 +30,14 @@ def calculate_label_percentage(segmented_image, labels):
         label_pixels = np.sum(label_mask)
         label_percentages[label] = (label_pixels / total_pixels) * 100
     return label_percentages
+
+def save_label(model_name, labels):
+    label = ""
+    for l in labels:
+        label += l + ", "
+    
+    with open("./testy/etykiety.txt", "a") as f:
+        f.write(f"{model_name}: {label}\n")
                
 
 def test_3():   
@@ -45,6 +53,7 @@ def test_3():
     lib.log_execution_time(end, "use_mask2former-base")
     print("mask2former-base")
     print("Labels: ", labels1)
+    save_label("use_mask2former_base", labels1)
 
     start = time.time()
     segmented_image2,labels2,masks2 = lib.use_mask2former(image, model = 'large', test_colors = True)
@@ -53,6 +62,7 @@ def test_3():
     lib.log_execution_time(end, "use_mask2former-large")
     print("mask2former-large")
     print("Labels: ", labels2)
+    save_label("use_mask2former_large", labels2)
 
 
 
@@ -98,7 +108,7 @@ def test_3():
     print()
     print("Comparing segmentations:")
     print("ResNet-50 vs ResNet-101")
-    compare_segmentations(masks1, labels1, masks2, labels2, model1 = "use_mask2former_base", model2 = "use_mask2former_large", save_comparison=True)
+    compare_segmentations(masks1, labels1, masks2, labels2, model1 = "use_mask2former_base", model2 = "use_mask2former_large", save_comparison=False)
 
 
 

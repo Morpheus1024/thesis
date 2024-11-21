@@ -9,6 +9,14 @@ def save_segmentation_comparison(model1, model2, label, IoU):
     with open("./testy/segmentation_comparison.txt", "a") as f:
         f.write(f"{model1} {model2} {label} {IoU}\n")
 
+def save_label(model_name, labels):
+    label = ""
+    for l in labels:
+        label += l + ", "
+    
+    with open("./testy/etykiety.txt", "a") as f:
+        f.write(f"{model_name}: {label}\n")
+
 def compare_segmentations(masks1, labels1, masks2, labels2, model1, model2, save_comparison = False):
 
     for i in range(len(labels1)):
@@ -44,6 +52,7 @@ def test_3():
     print("Time: ", start)
     lib.log_execution_time(start, "deeplabv3-apple")
     print("Labels: ", labels1)
+    save_label("deeplabv3-apple", labels1)
 
     start = time.time()
     segmented_image2,labels2,masks2 = lib.use_DeepLabV3(image, model = 'apple-xx', test_colors = True)
@@ -51,6 +60,7 @@ def test_3():
     print("Time: ", start)
     lib.log_execution_time(start, "deeplabv3-apple-xx")
     print("Labels: ", labels2)
+    save_label("deeplabv3-apple-xx", labels2)
 
     start = time.time()
     segmented_image3,labels3,masks3 = lib.use_DeepLabV3(image, model = 'google', test_colors = True)
@@ -58,6 +68,7 @@ def test_3():
     print("Time: ", start)
     lib.log_execution_time(start, "deeplabv3-google")
     print("Labels: ", labels3)
+    save_label("deeplabv3-google", labels3)
 
 
     # Display segmented images
@@ -124,11 +135,11 @@ def test_3():
     print()
     print("Comparing segmentations:")
     print("Apple - Apple-XX:")
-    compare_segmentations(masks1, labels1, masks2, labels2, model1 = "deeplabv3-apple", model2 = "deeplabv3-apple-xx", save_comparison=True)
+    compare_segmentations(masks1, labels1, masks2, labels2, model1 = "deeplabv3-apple", model2 = "deeplabv3-apple-xx", save_comparison=False)
     print("Apple - Google:")
-    compare_segmentations(masks1, labels1, masks3, labels3, model1 = "deeplabv3-apple", model2 = "deeplabv3-google", save_comparison=True)
+    compare_segmentations(masks1, labels1, masks3, labels3, model1 = "deeplabv3-apple", model2 = "deeplabv3-google", save_comparison=False)
     print("Apple-XX - Google:")
-    compare_segmentations(masks2, labels2, masks3, labels3, model1="deeplabv3-apple-xx", model2="deeplabv3-google", save_comparison=True)
+    compare_segmentations(masks2, labels2, masks3, labels3, model1="deeplabv3-apple-xx", model2="deeplabv3-google", save_comparison=False)
 
 
 

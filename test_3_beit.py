@@ -21,6 +21,14 @@ def compare_segmentations(masks1, labels1, masks2, labels2, model1, model2, save
                 if save_comparison:
                     save_segmentation_comparison(model1, model2, labels1[i], iou_score)
 
+def save_label(model_name, labels):
+    label = ""
+    for l in labels:
+        label += l + ", "
+    
+    with open("./testy/etykiety.txt", "a") as f:
+        f.write(f"{model_name}: {label}\n")
+
     # Calculate percentage of each label in the segmented images
 def calculate_label_percentage(segmented_image, labels):
     label_percentages = {}
@@ -70,11 +78,15 @@ def test_3():
     plt.title("BEiT-base")
     plt.xlabel(f"Labels: {', '.join(labels1)}")
 
+    save_label("BEiT-base", labels1)
+
     plt.subplot(2, 4, 3)
     plt.imshow(segmented_image2)
     plt.axis('off')
     plt.title("BEiT-large")
     plt.xlabel(f"Labels: {', '.join(labels2)}")
+
+    save_label("BEiT-large", labels2)
 
     # display difference between segmented images
     segmented_image1 = np.array(segmented_image1)

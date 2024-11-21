@@ -9,6 +9,14 @@ def save_segmentation_comparison(model1, model2, label, IoU):
     with open("./testy/segmentation_comparison.txt", "a") as f:
         f.write(f"{model1} {model2} {label} {IoU}\n")
 
+def save_label(model_name, labels):
+    label = ""
+    for l in labels:
+        label += l + ", "
+    
+    with open("./testy/etykiety.txt", "a") as f:
+        f.write(f"{model_name}: {label}\n")
+
 def compare_segmentations(masks1, labels1, masks2, labels2, model1, model2, save_comparison = False):
 
     for i in range(len(labels1)):
@@ -44,6 +52,7 @@ def test_3():
     print("Time: ", end)
     lib.log_execution_time(end, "use_oneformer-large-ade20k")
     print("Labels: ", labels1)
+    save_label("oneformer-large-ade20k", labels1)
 
     start = time.time()
     segmented_image2,labels2,masks2 = lib.use_OneFormer(image, model = 'large', dataset="coco", test_colors = True)
@@ -51,6 +60,7 @@ def test_3():
     print("Time: ", end)
     lib.log_execution_time(end, "use_oneformer-large-coco")
     print("Labels: ", labels2)
+    save_label("oneformer-large-coco", labels2)
 
     start = time.time()
     segmented_image3,labels3,masks3 = lib.use_OneFormer(image, model = 'large', dataset="cityscapes", test_colors = True)
@@ -58,6 +68,7 @@ def test_3():
     print("Time: ", end)
     lib.log_execution_time(end, "use_oneformer-large-cityscapes")
     print("Labels: ", labels3)
+    save_label("oneformer-large-cityscapes", labels3)
 
     start = time.time()
     segmented_image4,labels4,masks4 = lib.use_OneFormer(image, model = 'tiny', dataset="ade20k", test_colors = True)
@@ -65,6 +76,7 @@ def test_3():
     print("Time: ", end)
     lib.log_execution_time(end, "use_oneformer-tiny-ade20k")
     print("Labels: ", labels4)
+    save_label("oneformer-tiny-ade20k", labels4)
 
 
     # Display segmented images

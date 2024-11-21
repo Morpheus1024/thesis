@@ -30,6 +30,14 @@ def calculate_label_percentage(segmented_image, labels):
         label_pixels = np.sum(label_mask)
         label_percentages[label] = (label_pixels / total_pixels) * 100
     return label_percentages
+
+def save_label(model_name, labels):
+    label = ""
+    for l in labels:
+        label += l + ", "
+    
+    with open("./testy/etykiety.txt", "a") as f:
+        f.write(f"{model_name}: {label}\n")
                
 
 def test_3():   
@@ -44,6 +52,7 @@ def test_3():
     print("Time: ", start)
     lib.log_execution_time(start, "use_maskformer-tiny-coco")
     print("Labels: ", labels1)
+    save_label("use_maskformer-tiny-coco", labels1)
 
     start = time.time()
     segmented_image2,labels2,masks2 = lib.use_MaskFormer(image, model = 'tiny', dataset='ade', test_colors = True)
@@ -51,6 +60,7 @@ def test_3():
     print("Time: ", start)
     lib.log_execution_time(start, "use_maskformer-tiny-ade")
     print("Labels: ", labels2)
+    save_label("use_maskformer-tiny-ade", labels2)
 
     start = time.time()
     segmented_image3,labels3,masks3 = lib.use_MaskFormer(image, model = 'small', dataset='coco', test_colors = True)
@@ -58,6 +68,7 @@ def test_3():
     print("Time: ", start)
     lib.log_execution_time(start, "use_maskformer-small-coco")
     print("Labels: ", labels3)
+    save_label("use_maskformer-small-coco", labels3)
 
     start = time.time()
     segmented_image4,labels4,masks4 = lib.use_MaskFormer(image, model = 'small', dataset='ade', test_colors = True)
@@ -65,6 +76,7 @@ def test_3():
     print("Time: ", start)
     lib.log_execution_time(start, "use_maskformer-small-ade")
     print("Labels: ", labels4)
+    save_label("use_maskformer-small-ade", labels4)
 
     start = time.time()
     segmented_image5,labels5,masks5 = lib.use_MaskFormer(image, model = 'base', dataset='coco', test_colors = True)
@@ -72,6 +84,7 @@ def test_3():
     print("Time: ", start)
     lib.log_execution_time(start, "use_maskformer-base-coco")
     print("Labels: ", labels5)
+    save_label("use_maskformer-base-coco", labels5)
 
     start = time.time()
     segmented_image6,labels6,masks6 = lib.use_MaskFormer(image, model = 'base', dataset='ade', test_colors = True)
@@ -79,6 +92,7 @@ def test_3():
     print("Time: ", start)
     lib.log_execution_time(start, "use_maskformer-base-ade")
     print("Labels: ", labels6)
+    save_label("use_maskformer-base-ade", labels6)
 
     start = time.time()
     segmented_image7,labels7,masks7 = lib.use_MaskFormer(image, model = 'large', dataset='coco', test_colors = True)
@@ -86,6 +100,7 @@ def test_3():
     print("Time: ", start)
     lib.log_execution_time(start, "use_maskformer-large-coco")
     print("Labels: ", labels7)
+    save_label("use_maskformer-large-coco", labels7)
 
     start = time.time()
     segmented_image8,labels8,masks8 = lib.use_MaskFormer(image, model = 'large', dataset='ade', test_colors = True)
@@ -93,6 +108,7 @@ def test_3():
     print("Time: ", start)
     lib.log_execution_time(start, "use_maskformer-large-ade")
     print("Labels: ", labels8)
+    save_label("use_maskformer-large-ade", labels8)
 
 
     # Display segmented images
