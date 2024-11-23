@@ -7,10 +7,10 @@ from PIL import Image
 def example_3():
 
     #Load image
-    image = Image.open("./example_3.png")
+    image = Image.open("./example_3.jpg")
 
     #Segment image and get depth image
-    segmented_image, _, _  = lib.use_BEiT_semantic(image, add_legend=False) # here can by used any other semantic segmentation model aviable in library
+    segmented_image, _, _  = lib.use_mask2former(image,model = 'large',add_legend=False) # here can by used any other semantic segmentation model aviable in library
     depth_image, _ = lib.use_BEiT_depth(image) # here can by used any other depth estimation model aviable in library
 
     # create 3D semantic map

@@ -874,6 +874,17 @@ def log_execution_time(time, function_name: str, print_log = False) -> None:
     with open("execution_time_log.txt", "a") as file:
         file.write(f"{function_name} {execution_time:.4f} \n")
 
+def rs_log_execution_time(time, function_name: str, print_log = False) -> None:
+    '''
+        Function logs the execution time of a function.
+    '''
+    #execution_time = time.time() - start_time
+    execution_time = time
+    if print_log: print(f"Execution time of {function_name}: {execution_time:.2f} seconds")
+
+    with open("./testy/rs_time.txt", "a") as file:
+        file.write(f"{execution_time:.4f} \n")
+
 
 def _generate_color_palette_for_testy(n: int):
     """

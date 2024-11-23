@@ -71,40 +71,6 @@ def test_2():
     cmap = 'jet'
 
 
-    # fig = plt.figure(figsize=(7, 7))
-    # fig.add_subplot(2,3,1)
-    # plt.imshow(depth_image1,cmap=cmap)
-    # plt.title("Original Depth Image")
-    # fig.add_subplot(2,3,2)
-    # plt.imshow(depth_image_AI1,cmap=cmap)
-    # plt.title("BEiT Depth")
-    # fig.add_subplot(2,3,3)
-    # plt.imshow(depth_image_AI2,cmap=cmap)
-    # plt.title("MiDaS Hybrid")
-    # fig.add_subplot(2,3,4)
-    # plt.imshow(depth_image_AI3,cmap=cmap)
-    # plt.title("Depth Anything small")
-    # fig.add_subplot(2,3,5)
-    # plt.imshow(depth_image_AI4,cmap=cmap)
-    # plt.title("Depth Anything large")
-    # fig.add_subplot(2,3,6)
-    # plt.imshow(depth_image_AI5,cmap=cmap)
-    # plt.title("Depth Anything base")
-
-    # for ax in fig.get_axes():
-    #     ax.axis('off')
-
-    # plt.tight_layout()
-    
-
-    # plt.show()
-
-    # plt.imsave("./testy/depth_image_BEiT.png", depth_image_AI1)
-    # plt.imsave("./testy/depth_image_MiDaS_Hybrid.png", depth_image_AI2)
-    # plt.imsave("./testy/depth_image_Depth_anythong_small.png", depth_image_AI3)
-    # plt.imsave("./testy/depth_image_Depth_anythong_large.png", depth_image_AI4)
-    # plt.imsave("./testy/depth_image_Depth_anythong_base.png", depth_image_AI5)
-
 
     print()
 
