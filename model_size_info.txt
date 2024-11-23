@@ -1,0 +1,27 @@
+
+deeplabv3-apple-xx &            1.0616 \\ 7,57 MB
+deeplabv3-google &            1.1162 \\ 10,4 MB
+SegFormer-ade20k &            1.2380 \\ 15,1 MB
+MiDaS\_Hybrid &            1.6915 \\ 490 MB
+deeplabv3-apple &            1.8205 \\ 25,6MB
+MiDaS &            1.9354 \\
+maskformer-tiny-ade &            2.0053 \\ 167MB
+maskformer-small-ade &            2.2043 \\ 253MB
+mask2former-base &            2.2499 \\ 866MB
+SegFormer-cityscapes &            3.0337 \\ 54,8MB
+Depth\_Anything &            3.6496 \\ 99,2MB
+mask2former-large &            3.8535 \\ 866MB
+maskformer-small-coco &            3.8981 \\ 253MB
+maskformer-tiny-coco &            4.1800 \\ 167MB
+maskformer-base-ade &            4.2438 \\ 412MB
+maskformer-base-coco &            4.9409 \\ 412M
+ResNet-50 &            5.5988 \\ 172MB
+BEiT\_depth &            5.8368 \\ 443MB
+ResNet-101 &            5.9512 \\ 176MB
+maskformer-large-ade &            7.1778 \\ 851MB
+maskformer-large-coco &            8.6099 \\ 850MB
+oneformer-large-coco &            9.0925 \\ 879MB
+oneformer-tiny-ade20k &            9.2391 \\ 203MB
+oneformer-large-cityscapes &            9.2516 \\ 879MB
+BEiT-base &            9.6830 \\ 414MB
+BEiT-large &           18.0528 \\ 1341MB
