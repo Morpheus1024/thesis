@@ -21,7 +21,7 @@ def example_1():
     print(f"fx: {realsense_config.fx}, fy:{realsense_config.fy}")
     print(f"{realsense_config.width}x{realsense_config.height}")
 
-    #get color and depth image
+    #get color and depth image form camera
     color_image, depth_image = lib.get_rgb_and_depth_image_from_realsense()
 
     # Display the images
