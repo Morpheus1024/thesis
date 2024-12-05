@@ -33,10 +33,10 @@ def example_1():
     plt.show()
 
     #get depth point cloud
-    lib.save_ply_file_from_realsense(filename="example_1")
+    lib.save_ply_file_from_realsense(filename="1")
 
     # view point cloud
-    lib.view_cloude_point_from_ply("example_1.ply")   
+    lib.view_cloude_point_from_ply("1.ply")   
 
 
 if __name__ == "__main__":
