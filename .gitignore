@@ -10,6 +10,11 @@ sam*
 *.ply
 *zip
 *.json
+.vscode
+*.pyc
+*CityScapes
+*gtFine
+*__pycache__
 !example_3.png
 !./testy*
 !depth_image*

@@ -1,20 +1,27 @@
 import cv2
-import time
 import torch
 import numpy as np
 import open3d as o3d
 from PIL import Image
 import pyrealsense2 as rs
 from transformers import pipeline
-from transformers import AutoImageProcessor, DPTForDepthEstimation
 
 
-#MARK: Funckaje REALSENSE
+#MARK:  REALSENSE
 
-def check_if_realsense_is_present(print_logs = False):
-    '''
-        Function checks if RealSense camera is present.
-    '''
+def check_if_realsense_is_present(print_logs = False) -> bool:
+    """ 
+    Function checks if RealSense camera is present.
+        
+    Args:
+        bool: print_logs
+        - if True then there are communicats printed in terminal
+            
+    Returns:
+        bool: 
+            - True if camera is present
+            - False if camera is missing
+    """
     try:
         pipeline = rs.pipeline()
         config = rs.config()
@@ -37,14 +44,24 @@ def check_if_realsense_is_present(print_logs = False):
         if print_logs: print(e)
         return False
 
-def get_rgb_and_depth_image_from_realsense(print_logs = False, height = 480, width = 640):
+def get_rgb_and_depth_image_from_realsense(print_logs = False, height = 480, width = 640) -> tuple[np.array, np.array]:
 
-    '''
-        Functions is looking for RealSense camera.
-        If present, returns color and depth image.
-        If camera is not found, function returns None, None
+    """ 
+    Function is looking for RealSense camera. If camera is present, returns color and depth image. If camera is not found, function returns None, None
 
-    '''
+
+    Args:
+        print_logs: bool: If True, function prints logs.
+        height: int: Amount of height pixels of both images.
+        width: int: Ammount of width pixels of both images.
+            
+
+    Returns:
+        colorimage: array: Containing color image.
+
+        depthimage: array: Containing depth image.
+        
+    """
 
     try:
         pipeline = rs.pipeline()
@@ -106,9 +123,11 @@ def get_rgb_and_depth_image_from_realsense(print_logs = False, height = 480, wid
     
         
 def save_ply_file_from_realsense(filename: str) -> None:
-    '''
-        Function is looking for RealSense camera and saves point cloud to .ply file.
-    '''
+    """Save raw point cloude directly from Intel RealSense camera
+
+    Args:
+        filename (str): name or path of a point cloude camera file
+    """
     pc = rs.pointcloud()
     points = rs.points()
     pipeline = rs.pipeline()
@@ -137,9 +156,11 @@ def save_ply_file_from_realsense(filename: str) -> None:
         pipeline.stop()
 
 def get_realsense_camera_config() -> rs.intrinsics:
-    '''
-        Function is looking for RealSense camera and returns its configuration.
-    '''
+    """Function that returne Intel RealSense Camera config
+
+    Returns:
+        rs.intrinsics: config on a camera
+    """
     pipeline = rs.pipeline()
     config = rs.config()
 
@@ -164,20 +185,23 @@ def get_realsense_camera_config() -> rs.intrinsics:
     return depth_intrinsics
     
 def create_semantic_3D_map(segmented_color_image, depth_image, fx: float, fy: float, z_scale = 0.001, print_logs = False, save_ply = False) -> o3d.geometry.PointCloud: #MARK: 3D semantic map
-    """
-    Create a 3D semantic map from the segmented color image and the depth image.
+    """Function that process image with its depth into 3D semantic map
 
-    Parameters:
-    :param segmented_color_image (numpy.ndarray): Segmented RGB image.
-    :param depth_image (numpy.ndarray): Depth image corresponding to the segmented RGB image.
-    :param fx
-    :param fy
-    :param z_scale
-    :param print_logs: True or False
-    :param save_ply: True or False
+    Args:
+        segmented_color_image (_type_): _description_
+        depth_image (_type_): _description_
+        fx (float): _description_
+        fy (float): _description_
+        z_scale (float, optional): _description_. Defaults to 0.001.
+        print_logs (bool, optional): _description_. Defaults to False.
+        save_ply (bool, optional): _description_. Defaults to False.
+
+    Raises:
+        ValueError: _description_
+        ValueError: _description_
 
     Returns:
-    open3d.geometry.PointCloud: A 3D point cloud representing the semantic map.
+        o3d.geometry.PointCloud: _description_
     """
 
     if isinstance(segmented_color_image,Image.Image):
@@ -207,10 +231,13 @@ def create_semantic_3D_map(segmented_color_image, depth_image, fx: float, fy: fl
     for v in range(depth_image.shape[0]):
         for u in range(depth_image.shape[1]):
             z = depth_image[v, u] * z_scale
-            if z <=0:
-                continue  
-            x = -(u - cx) * z / fx
-            y = -(v - cy) * z / fy
+            if z <=0: continue 
+                 
+            #x = (u - cx)# * z / fx
+            #y = -(v - cy)# * z / fy
+
+            x = u /fx
+            y = -v /fy
 
             points.append([x, y, z])
             color = segmented_color_image[v, u, :3] / 255.0  
@@ -233,110 +260,171 @@ def create_semantic_3D_map(segmented_color_image, depth_image, fx: float, fy: fl
     return point_cloud
 
 def view_cloude_point_from_ply(filename: str) -> None:
-    '''
-        Function reads and displays .ply file.
-    '''
+    """Function to view point cloude from pointed file
+
+    Args:
+        filename (str)
+    """
     pcd = o3d.io.read_point_cloud(filename)
     o3d.visualization.draw_geometries([pcd])
 
-def view_cloude_point(cloude_point) -> None:
-    o3d.visualization.draw_geometries([cloude_point])
+def view_cloude_point(point_cloude) -> None:
+    """Function to view point cloude
+
+    Args:
+        cloude_point (array of points): Input cloude to view
+    """
+    o3d.visualization.draw_geometries([point_cloude])
+
+def photo_from_webcam() -> np.array:
+    """Capture image form PC webcam
+
+    Raises:
+        ValueError: Error if there is no image form camera
+
+    Returns:
+        np.array: image form camera
+    """
+
+    cam = cv2.VideoCapture(0)
+    result, image = cam.read()
+
+    if result: return image
+    else: raise ValueError("No image form webcam")
+
 
 #MARK: Funkcje segmentacji
 
-def segment_knn(photo, centroids_number: int):
-    '''
-        Function takes a photo and returns segmented photo using knn algorythm.
-    '''
-    # Convert the image to RGB
-    #photo = cv2.cvtColor(photo, cv2.COLOR_BGR2RGB)
-    # Reshape the image to be a list of pixels
-    pixels = photo.reshape(-1, 3)
-    # Convert to float
+def knn(image, centroids_number: int) -> np.array:
+    """Uses knn algoryth on a given image
+
+    Args:
+        image (cv2 image): Input image
+        centroids_number (int): Number of centroids
+
+    Returns:
+        np.array: Image after processing
+    """
+    pixels = image.reshape(-1, 3)
     pixels = np.float32(pixels)
-    # Define criteria, number of clusters and apply kmeans()
     criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 100, 0.2)
     k = centroids_number
     _, labels, (centers) = cv2.kmeans(pixels, k, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
-    # Convert back to 8 bit values
     centers = np.uint8(centers)
     segmented_data = centers[labels.flatten()]
-    # Reshape back to the original image dimension
-    segmented_image = segmented_data.reshape((photo.shape))
+    segmented_image = segmented_data.reshape((image.shape))
     return segmented_image, labels, centers
 
-def segment_thresholding(photo, threshold: int):
-    '''
-        Function takes a photo and returns segmented photo using thresholding algorythm.
-    '''
-    gray = cv2.cvtColor(photo, cv2.COLOR_BGR2GRAY)
+def threshold(image, threshold: int) -> np.array:
+    """Uses thresholding on a given image
+
+    Args:
+        image (cv2. image): Input image
+        threshold (int): threshold value
+
+    Returns:
+        np.array: Image after proecssing
+    """
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     _, segmented_image = cv2.threshold(gray, threshold, 255, cv2.THRESH_BINARY)
     return segmented_image
 
-def segment_local_thresholding(photo):
-    '''
-        Function takes a photo and returns segmented photo using local thresholding algorythm.
-    '''
-    gray = cv2.cvtColor(photo, cv2.COLOR_BGR2GRAY)
+def local_threshold(image):
+    """Uses local thresholding on a given image
+
+    Args:
+        imafe (cv2 image): Input image
+
+    Returns:
+        np.array: Image after processing
+    """
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     segmented_image = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
     return segmented_image
 
-def segment_canny(photo, lower_boundry=100, upper_boundry=200):
-    '''
-        Function takes a photo and returns segmented photo using canny algorythm.
-    '''
-    gray = cv2.cvtColor(photo, cv2.COLOR_BGR2GRAY)
+def canny(image, lower_boundry=100, upper_boundry=200) -> np.array:
+    """Uses canny edge detection on a given image.
+
+    Args:
+        photo (cv2 image): _description_
+        lower_boundry (int, optional) Defaults to 100.
+        upper_boundry (int, optional): Defaults to 200.
+
+    Returns:
+        np.array: Processed image
+    """
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     segmented_image = cv2.Canny(gray, lower_boundry, upper_boundry)
     return segmented_image
     
-def segment_sobel(photo, kernel_size=3, gray=True):
-    '''
-        Function takes a photo and returns segmented photo using sobel algorythm.
-    '''
+def sobel(image, kernel_size=3, gray=True) -> np.array:
+    """Uses Sobels operator on a given image
+
+    Args:
+        image (cv2 image): input image
+        kernel_size (int, optional): Defaults to 3.
+        gray (bool, optional): Flage, that indicate if image should be process as grayscale. Defaults to True.
+
+    Raises:
+        ValueError: Kernel size value should be odd
+
+    Returns:
+        np.array: Image after processing
+    """
     if kernel_size % 2 == 0:
         raise ValueError("Kernel size must be odd")
     
     if gray:
-        gray = cv2.cvtColor(photo, cv2.COLOR_BGR2GRAY)
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=kernel_size)
         sobely = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=kernel_size)
         segmented_image = cv2.addWeighted(cv2.convertScaleAbs(sobelx), 0.5, cv2.convertScaleAbs(sobely), 0.5, 0)
     else:
-        sobelx = cv2.Sobel(photo, cv2.CV_64F, 1, 0, ksize=kernel_size)
-        sobely = cv2.Sobel(photo, cv2.CV_64F, 0, 1, ksize=kernel_size)
+        sobelx = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=kernel_size)
+        sobely = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=kernel_size)
         segmented_image = cv2.addWeighted(cv2.convertScaleAbs(sobelx), 0.5, cv2.convertScaleAbs(sobely), 0.5, 0)
     return segmented_image
 
-def segment_region_growing(image, seed_point: list, threshold=10):
-    height, width, channels = image.shape
-    segmented_region = np.zeros((height, width), np.bool_)
+def region_growing(image) -> np.array:
+    """Uses region growing algoryth on a given image
 
-    pixels_to_check = [seed_point]
-    seed_value = image[seed_point[0], seed_point[1], :]
+    Args:
+        image (cv2 image): input image
 
-    while len(pixels_to_check) > 0:
-        # Pobieramy obecny piksel do sprawdzenia
-        current_pixel = pixels_to_check.pop(0)
-        x, y = current_pixel[0], current_pixel[1]
+    Returns:
+        np.array: image after usage of region growing algorythm
+    """
 
-        if segmented_region[x, y]:
-            continue
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-        if np.all(np.abs(image[x, y, :] - seed_value) <= threshold):
-            segmented_region[x, y] = True
+    ret,thershold = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
 
-            if x > 0 and not segmented_region[x - 1, y]:
-                pixels_to_check.append((x - 1, y))
-            if x < height - 1 and not segmented_region[x + 1, y]:
-                pixels_to_check.append((x + 1, y))
-            if y > 0 and not segmented_region[x, y - 1]:
-                pixels_to_check.append((x, y - 1))
-            if y < width - 1 and not segmented_region[x, y + 1]:
-                pixels_to_check.append((x, y + 1))
+    kernel = np.ones((3, 3), np.uint8)
+    opening = cv2.morphologyEx(thershold, cv2.MORPH_OPEN, kernel, iterations=2)  
+    sure_bg = cv2.dilate(opening, kernel, iterations=3)
 
-    return segmented_region
+    distance = cv2.distanceTransform(opening, cv2.DIST_L2, 5)
+    ret, sure_fg = cv2.threshold(distance, 0.7 * distance.max(), 255, 0)
+    sure_fg = np.uint8(sure_fg)
+    unknown = cv2.subtract(sure_bg, sure_fg)
 
-def segment_watershed(image): 
+    ret, markers = cv2.connectedComponents(sure_fg)
+    markers = markers + 1
+    markers[unknown == 255] = 0
+
+    markers = cv2.watershed(image, markers)
+    image[markers ==-1] = [255,0,0]  
+    return markers
+
+def watershed(image) -> np.array: 
+    """Uses watershed algoryth on a given image
+
+    Args:
+        image (cv2 image): input image
+
+    Returns:
+        NDarray: image after wathershed
+    """
 
     gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
 
@@ -362,20 +450,29 @@ def segment_watershed(image):
 
     return image
 
-#MARK: Funkcje modeli głebi
+#MARK: Depth estimation Models
 
-def use_MiDaS(image, model = "MiDaS_small"): #DONE
-    '''
-        https://pytorch.org/hub/intelisl_midas_v2/
+def use_MiDaS(image, model = "MiDaS_small") -> np.array:
+    """Use MiDaS model form PyTorch hub to estimate depth of the given image.
 
-        :param image: image to estimate depth
-        :param model: model to use (MiDaS_small, DPT_Large, DPT_Hybrid)
-    '''
+    Args:
+        image (cv2 image): input image to estimate its depth.
+        model (str, optional): Model type to chose. Options: 'small', 'large', 'hybrid'. Defaults to "MiDaS_small".
 
-    if model not in ["MiDaS_small", "DPT_Large", "DPT_Hybrid"]:
-        raise ValueError("Model must be 'MiDaS_small', 'DPT_Large' or 'DPT_Hybrid'")
+    Raises:
+        ValueError: _description_
 
-    model_type = model
+    Returns:
+        image: estimated depth image
+    """
+    # if model not in ["MiDaS_small", "DPT_Large", "DPT_Hybrid"]:
+    #     raise ValueError("Model must be 'MiDaS_small', 'DPT_Large' or 'DPT_Hybrid'")
+    if model not in ['small', 'large','hybrid']: raise ValueError("Model must be 'small', 'large' or 'hybrid'")
+
+    if model == 'small': model_type = "MiDaS_small"
+    elif model == 'large': model_type = "DPT_Large"
+    elif model == 'hybrid': model_type = "DPT_Hybrid"
+
     midas = torch.hub.load("intel-isl/MiDaS", model_type)
 
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
@@ -402,19 +499,17 @@ def use_MiDaS(image, model = "MiDaS_small"): #DONE
 
     return prediction.cpu().numpy(), prediction
 
-def use_MiDaS_Hybrid(image):
-    """
-    Estimate the depth of an image using the MiDaS Hybrid model.
-    This function uses the Intel DPT-Hybrid-MiDaS model to perform depth estimation on the given image.
+def use_MiDaS_Hybrid(image) -> list:
+    """Use MiDaS Hybrid model form Hugging face to estimate depth of the given image.
+
     Args:
-        image: The input image for which depth estimation is to be performed. The image should be in a format compatible with the pipeline.
+        image (_type_): _description_
+
     Returns:
-        tuple: A tuple containing:
-            - depth: The estimated depth map of the input image.
-            - results: The full results dictionary from the depth estimation pipeline.
+        _type_: _description_
     """
 
-    device = "cuda" if torch.cuda.is_available() else -1
+    device = "CUDA" if torch.cuda.is_available() else -1
 
     depth_estimation = pipeline("depth-estimation", model="Intel/dpt-hybrid-midas", device=device)
 
@@ -428,18 +523,18 @@ def use_MiDaS_Hybrid(image):
 
     return depth, results
 
-def use_EVP(image): #FIXME:  nie działa???
-    """
-    Estimate the depth of an image using the EVP depth estimation model.
-    Parameters:
-    image (PIL.Image): The input image for depth estimation.
+def use_EVP(image) -> list: 
+    """Use EVP model form Hugging face to estimate depth of the given image.
+        IMPORTANT: right now model has a bug and cannot be used.
+
+    Args:
+        image (PIL Image or cv2 image): input image to estimate its depth
+
     Returns:
-    tuple: A tuple containing:
-        - depth (numpy.ndarray): The estimated depth map of the input image.
-        - results (dict): The full results dictionary from the depth estimation pipeline.
+        list: estimated depth image and dict with all estimation result information.
     """
 
-    device = "cuda" if torch.cuda.is_available() else -1
+    device = "CUDA" if torch.cuda.is_available() else -1
 
     depth_estimation = pipeline("depth-estimation", model="MykolaL/evp_depth", trust_remote_code=True, device = device)
 
@@ -447,19 +542,15 @@ def use_EVP(image): #FIXME:  nie działa???
 
     return results['depth'], results
 
-def use_BEiT_depth(image):
-    """
-    Estimate the depth of an image using the BEiT model.
-    This function uses the "depth-estimation" pipeline from the Hugging Face 
-    Transformers library with the "Intel/dpt-beit-large-512" model to estimate 
-    the depth of the given image.
+def use_BEiT_depth(image) -> list:
+    """Use BEiT depth model form Hugging face to estimate depth of the given image.
+
+
     Args:
-        image (PIL.Image or numpy.ndarray): The input image for which depth 
-        estimation is to be performed.
+        image (PIL Image or cv2 image): input image to estimate its depth.
+
     Returns:
-        tuple: A tuple containing:
-            - depth (numpy.ndarray): The estimated depth map of the input image.
-            - results (dict): The full results from the depth estimation pipeline.
+        list: estimated depth image and dict with all estimation result information.
     """
 
     if not isinstance(image, Image.Image):
@@ -471,15 +562,25 @@ def use_BEiT_depth(image):
 
     results = depth_estimation(image)
     depth = results['depth']
-    # depth = np.array(depth)
-    # depth = depth * 255 /depth.max()
-    #depth = Image.fromarray(depth.astype("uint8"))
 
     return depth, results
 
-def use_Depth_Anything(image, model: str = "small"):
+def use_Depth_Anything(image, model: str = 'small') -> list:
+    """Use Depth Anything model form Hugging face to estimate depth of the given image.
 
-    if model not in ["small","base", "large"]:
+    Args:
+        image (PIL Image or cv2 image): input image to estimate its depth.
+        model (str, optional): model size to chose. Options: 'small', 'base', 'large' Defaults to 'small'.
+
+    Raises:
+        ValueError: Raise when models size is incorrect.
+
+    Returns:
+        list: estimated depth image and dict with all estimation result information.
+    """
+
+
+    if model not in ['small','base', 'large']:
         raise ValueError("Model must be 'small', 'base' or 'large'")
 
     if not isinstance(image, Image.Image):
@@ -492,15 +593,26 @@ def use_Depth_Anything(image, model: str = "small"):
     results = depth_estimation(image)
 
     depth = results['depth']
-    # depth = np.array(depth)
-    # depth = depth * 255 /torch.max(results['predicted_depth']).item()
-    #depth = Image.fromarray(depth.astype("uint8"))
 
     return depth, results
 
-#MARK: Funkcje segmentacji semantycznej obrazu
+#MARK: Segmentation models
 
-def use_DeepLabV3(image, add_legend = False, model = 'apple', test_colors: bool = False): #DONE
+def use_DeepLabV3(image, add_legend = False, model = 'apple', test_colors: bool = False) -> list:
+    """Function uses DeepLabV3 model to segment image form Hugging face.
+
+
+    Args:
+        image (PIL Image or cv2 image): input image that will be segmented        
+        add_legend (bool, optional): Flag that indicates to add legend into segemnted image with label. Defaults to False.        
+        model (str, optional): Model to choose. Options: 'apple', 'apple-xx', 'google'. Defaults to 'apple'.
+        test_colors (bool, optional): Flag that trigger usage of constant color pallete for segmentation masks. Defaults to False.
+    Raises:
+        ValueError: Raise when models name is incorrect.
+
+    Returns:
+        list: segmented image as PIL Image, list of labels and list of masks.
+    """
 
     if model not in ['apple', 'apple-xx', 'google']:
         raise ValueError("Model must be 'apple', 'apple-xx' or 'google'")
@@ -508,6 +620,9 @@ def use_DeepLabV3(image, add_legend = False, model = 'apple', test_colors: bool 
     if model == 'apple': model="apple/deeplabv3-mobilevit-small"
     elif model == 'apple-xx': model="apple/deeplabv3-mobilevit-xx-small"
     elif model == 'google': model="google/deeplabv3_mobilenet_v2_1.0_513"
+
+    if not isinstance(image, Image.Image):
+        image = _cv2_to_pil(image)
 
     device = "CUDA" if torch.cuda.is_available() else -1
 
@@ -539,14 +654,23 @@ def use_DeepLabV3(image, add_legend = False, model = 'apple', test_colors: bool 
 
     return masked_image, [result['label'] for result in results], [result['mask'] for result in results]
     
-def use_OneFormer(image, _task = 'semantic', model = 'large', dataset = 'ade20k', add_legend = False, test_colors = False): #DONE
-    '''
-        Function takes an image and returns segmented image using OneFormer model.
-        :param image: image to segment
-        :param dataset: dataset to use (ade20k, coco, cityscapes)
-        :param model: model to use (large, tiny - only for ade20k)
-        :return: segmented image, labels, masks
-    '''
+def use_OneFormer(image, model = 'large', dataset = 'ade20k', add_legend = False, test_colors = False) -> list: 
+    """Function uses OneFormer model to segment image form Hugging face.
+
+    Args:
+        image (PIL Image or cv2 image): input image that will be segmented.
+        model (str, optional): Model size to choose. Options: 'tiny', 'large'. Defaults to 'large'. IMPORTATN: 'tiny' model can be used only with 'ade20k' dataset.
+        dataset (str, optional): Specyfic training dataset. Options: 'ade20k', 'coco', 'cityscapes' Defaults to 'ade20k'.
+        add_legend (bool, optional): Flag that indicates to add legend into segemnted image with label. Defaults to False.
+        test_colors (bool, optional): Flag that trigger usage of constant color pallete for segmentation masks. Defaults to False.
+    Raises:
+        ValueError: Raise when models size is incorrect.
+        ValueError: Raise when dataset name is incorrect.
+        ValueError: Raise when 'tiny' model is used without 'ade20k' dataset.
+
+    Returns:
+        list: _description_
+    """
 
     if model not in ['large', 'tiny']:
         raise ValueError("Model must be 'large' or 'tiny'")
@@ -591,22 +715,29 @@ def use_OneFormer(image, _task = 'semantic', model = 'large', dataset = 'ade20k'
 
     return masked_image, [result['label'] for result in results], [result['mask'] for result in results]
        
-def use_BEiT_semantic(image, add_legend = False, model = 'base', test_colors = False): #FIXME
+def use_BEiT_semantic(image, add_legend = False, model = 'base', test_colors = False) -> list: 
+    """Function uses BEiT model to segment image form Hugging face.
 
-    '''
-    [link](https://huggingface.co/docs/transformers/main/en/model_doc/beit#transformers.BeitForImageClassification)
-    
-    model = 'base'
+    Args:
+        image (PIL Image or cv2 image): input image that will be segmented
+        add_legend (bool, optional): Flag that indicates to add legend into segemnted image with label. Defaults to False.        
+        model (str, optional): Model size to choose. Options: 'base', 'large' Defaults to 'base'.
+        test_colors (bool, optional): Flag that trigger usage of constant color pallete for segmentation masks. Defaults to False.
+    Raises:
+        ValueError: Raise when models size is incorrect
+    Returns:
+        list: segmented image as PIL Image, list of labels and list of masks
+    """
 
-    model = 'large' - realy large, over 2.2GB of size
-    '''
     if model not in ['base', 'large']:
         raise ValueError("Model must be 'base' or 'large'")
-        return None, None, None
     
     model = f"microsoft/beit-{model}-finetuned-ade-640-640" 
 
     device = "CUDA" if torch.cuda.is_available() else -1
+
+    if not isinstance(image, Image.Image):
+        image = _cv2_to_pil(image)
 
     semantic_segmentation = pipeline("image-segmentation", model=model, device=device)
 
@@ -638,17 +769,32 @@ def use_BEiT_semantic(image, add_legend = False, model = 'base', test_colors = F
 
     return masked_image, [result['label'] for result in results], [result['mask'] for result in results]
     
-def use_SegFormer(image, add_legend = False, dataset = 'ade20k', test_colors = False): #DONE
-    #https://huggingface.co/nvidia/segformer-b0-finetuned-ade-512-512
+def use_SegFormer(image, add_legend = False, dataset = 'ade20k', test_colors = False) -> list:
+    """Function uses SegFormer model to segment image form Hugging face.
+
+    Args:
+        image (PIL Image or cv2 image): input image that will be segmented
+        add_legend (bool, optional): Flag that indicates to add legend into segemnted image with label. Defaults to False.        
+        dataset (str, optional): Specyfic training dataset. Options: 'ade20k', 'cityscapes' Defaults to 'ade20k'.
+        test_colors (bool, optional): Flag that trigger usage of constant color pallete for segmentation masks. Defaults to False.
+    Raises:
+        ValueError: Raise when models size is incorrect
+        ValueError: Raise when dataset name is incorrect
+
+    Returns:
+        list: segmented image as PIL Image, list of labels and list of masks    
+    """
 
     if dataset not in ['ade20k', 'cityscapes']:
         raise ValueError("Dataset must be 'ade20k' or 'cityscapes'")
-        return None, None, None
 
     if dataset == 'ade20k': model = "nvidia/segformer-b0-finetuned-ade-512-512"
     elif dataset == 'cityscapes': model = "nvidia/segformer-b1-finetuned-cityscapes-1024-1024"
     
     device = "CUDA" if torch.cuda.is_available() else -1
+
+    if not isinstance(image, Image.Image):
+        image = _cv2_to_pil(image)
 
     semantic_segmentation = pipeline("image-segmentation",  model=model, device=device)   
 
@@ -677,25 +823,23 @@ def use_SegFormer(image, add_legend = False, dataset = 'ade20k', test_colors = F
 
     return masked_image, [result['label'] for result in results], [result['mask'] for result in results]
 
-def use_MaskFormer(image, add_legend = False, model = 'base', dataset = 'coco', test_colors= False):
+def use_MaskFormer(image, add_legend = False, model = 'base', dataset = 'coco', test_colors= False) -> list:
+    """Function uses mMaskFormer model to segment image form Hugging face.
 
-    """
-    Apply MaskFormer model for semantic segmentation on the given image.
-    Parameters:
-    image (numpy.ndarray): The input image on which segmentation is to be performed.
-    add_legend (bool, optional): If True, adds a legend next to the segmented image. Default is False.
-    model (str, optional): The model variant to use. Must be one of 'tiny', 'small', 'base', or 'large'. Default is 'base'.
-    dataset (str, optional): The dataset on which the model was trained. Must be 'coco' or 'ade'. Default is 'coco'.
-    Returns:
-    tuple: A tuple containing:
-        - masked_image (numpy.ndarray): The image with applied segmentation masks.
-        - labels (list of str): List of labels for each segmented region.
-        - masks (list of numpy.ndarray): List of masks for each segmented region.
+    Args:
+        image (PIL Image or cv2 image): input image that will be segmented
+        add_legend (bool, optional): Flag that indicates to add legend into segemnted image with label. Defaults to False.        model (str, optional): _description_. Defaults to 'base'.
+        model (str, optional): Model size to choose. Options: 'tiny', 'small', 'base', 'large'. Defaults to 'base'.
+        dataset (str, optional): Specyfic training dataset. Options: 'coco', 'ade' Defaults to 'coco'.
+        test_colors (bool, optional): Flag that trigger usage of constant color pallete for segmentation masks. Defaults to False.
+    
     Raises:
-    ValueError: If the model is not one of 'tiny', 'small', 'base', or 'large'.
-    ValueError: If the dataset is not 'coco' or 'ade'.
-    """
+        ValueError: Raise when models size is incorrect.
+        ValueError: Raise when dataset name is incorrect.
 
+    Returns:
+        list: segmented image as PIL Image, list of labels and list of masks
+    """
 
     if model not in ['tiny', 'small', 'base', 'large']:
         raise ValueError("Model must be 'tiny', 'small', 'base' or 'large'")
@@ -706,6 +850,9 @@ def use_MaskFormer(image, add_legend = False, model = 'base', dataset = 'coco', 
     model = f"facebook/maskformer-swin-{model}-{dataset}"
 
     device = "CUDA" if torch.cuda.is_available() else -1
+
+    if not isinstance(image, Image.Image):
+        image = _cv2_to_pil(image)
 
     semantic_segmentation = pipeline("image-segmentation", model=model, device=device)   
 
@@ -734,14 +881,29 @@ def use_MaskFormer(image, add_legend = False, model = 'base', dataset = 'coco', 
 
     return masked_image, [result['label'] for result in results], [result['mask'] for result in results]
 
-#MARK: Funkcje segmentacji panopticon
-def use_mask2former(image, add_legend=False, model = 'base', test_colors = False): #DONE
+def use_mask2former(image, add_legend=False, model = 'base', test_colors = False) ->list:
+    """Function uses mask2former model to segment image form Hugging face.
+
+    Args:
+        image (PIL Image or cv2 image): input image that will be segmented
+        add_legend (bool, optional): Flag that indicates to add legend into segemnted image with label. Defaults to False.
+        model (str, optional): Model size to choose. Options: 'base', 'large' Defaults to 'base'.
+        test_colors (bool, optional): Flag that trigger usage of constant color pallete for segmentation masks. Defaults to False.
+
+    Raises:
+        ValueError: Raise when models size is incorrect
+
+    Returns:
+        list: segmented image as PIL Image, list of labels and list of masks
+    """
 
     if model not in ['base', 'large']:
         raise ValueError("Model must be 'base' or 'large'")
-        return None, None, None
 
     model = f"facebook/mask2former-swin-{model}-coco-panoptic"
+
+    if not isinstance(image, Image.Image):
+        image = _cv2_to_pil(image)
 
     device = "CUDA" if torch.cuda.is_available() else -1
 
@@ -770,12 +932,29 @@ def use_mask2former(image, add_legend=False, model = 'base', test_colors = False
         colors = [result['color'] for result in results]
         masked_image = _add_legend_next_to_segmented_imega(masked_image, labels, colors)
 
+    
+
     return masked_image, [result['label'] for result in results], [result['mask'] for result in results]
         
-def use_ResNet_panoptic(image, add_legend = False, model = '50', test_colors = False):
+def use_ResNet_panoptic(image, add_legend = False, model = '50', test_colors = False) -> list:
+    """Function uses ResNet model to segment image form Hugging face.
+
+    Args:
+        image (PIL Image or cv2 image): input image that will be segmented.
+        model (str, optional): Model size to choose. Options: '50','101' Defaults to '50'.
+        test_colors (bool, optional): Flag that trigger usage of constant color pallete for segmentation masks. Defaults to False.
+    Raises:
+        ValueError: Raise when models size is incorrect.
+
+    Returns:
+        list: segmented image as PIL image, list of labels and list of masks
+    """
 
     if model not in ['50', '101']:
         raise ValueError("Model must be '50' or '101'")
+    
+    if not isinstance(image, Image.Image):
+        image = _cv2_to_pil(image)
     
     device = "CUDA" if torch.cuda.is_available() else -1
 
@@ -807,9 +986,19 @@ def use_ResNet_panoptic(image, add_legend = False, model = '50', test_colors = F
 
     return masked_image, [result['label'] for result in results], [result['mask'] for result in results]
          
-#MARK: Funkcje pomocnicze
+#MARK: Additional functions
 
-def _add_legend_next_to_segmented_imega(segmented_image, labels: list, colors: list):
+def _add_legend_next_to_segmented_imega(segmented_image, labels: list, colors: list) -> Image:
+    """Hided function. It adds legend to a segmentes image.
+
+    Args:
+        segmented_image (PIL image): Input, already segmented image.
+        labels (list): List of segmentation labels.
+        colors (list): Colors of segmentation masks.
+
+    Returns:
+        Image: Segmented image with color legend on its right side.
+    """
     font = cv2.FONT_HERSHEY_SIMPLEX
     font_scale = 1
     font_thickness = 2
@@ -842,18 +1031,18 @@ def _add_legend_next_to_segmented_imega(segmented_image, labels: list, colors: l
 
     return masked_image_with_legend
 
-def _check_results_pipeline(results):
-    for i in range(len(results)):
-        label = results[i]['label']
-        print(f"Label: {label}")
-    for i in range(len(results)):
-        mask = results[i]['mask']
-        print(f"Mask: {mask}")
+def _cv2_to_pil(image) -> Image:
+    """Quick function that converts OpenCV image into PIL image
 
-def _cv2_to_pil(image):
+    Args:
+        image (cv2 image): input image
+
+    Returns:
+        PIL image: Converted image.
+    """
     return Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
 
-def generate_color_palette(n: int):
+def generate_color_palette(n: int) -> list:
 
     '''
         Function generates a color palette with n colors.
@@ -886,7 +1075,7 @@ def rs_log_execution_time(time, function_name: str, print_log = False) -> None:
         file.write(f"{execution_time:.4f} \n")
 
 
-def _generate_color_palette_for_testy(n: int):
+def _generate_color_palette_for_testy(n: int = 20) -> list:
     """
     Generate a color palette with n colors.
     Parameters:
@@ -894,6 +1083,7 @@ def _generate_color_palette_for_testy(n: int):
     Returns:
     list: A list of n colors in RGB format.
     """
+
     colors = [
         (255, 1, 1),    # Czerwony
         (1, 255, 1),    # Zielony
