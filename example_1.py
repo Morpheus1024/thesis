@@ -1,6 +1,6 @@
 # Example shows how to interuct with the realsense camera.
 
-import lib
+import simple_3D_semantic_map as lib
 import matplotlib.pyplot as plt
 
 def example_1(): 

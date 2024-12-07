@@ -1,6 +1,7 @@
 # Example shows how to create 3D semantic map from an loaded image
 
-import lib
+import simple_3D_semantic_map as lib
+#import lib
 import matplotlib.pyplot as plt
 from PIL import Image
 

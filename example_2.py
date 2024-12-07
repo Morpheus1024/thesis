@@ -1,6 +1,6 @@
 # This example demonstrates how to integrate images from RealSense camera with semantic segmentation and depth estimation models.
 
-import lib
+import simple_3D_semantic_map as lib
 import numpy as np
 import matplotlib.pyplot as plt
 
